@@ -17,3 +17,11 @@ rcpparma_bothproducts <- function(x) {
     .Call(`_BayesHFLM_rcpparma_bothproducts`, x)
 }
 
+myfirstfunc <- function() {
+    .Call(`_BayesHFLM_myfirstfunc`)
+}
+
+sampleMVN <- function(ell, Qc) {
+    .Call(`_BayesHFLM_sampleMVN`, ell, Qc)
+}
+

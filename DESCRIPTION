@@ -1,11 +1,11 @@
 Package: BayesHFLM
 Type: Package
-Title: What the package does (short line)
+Title: Bayesian Historical Functional Linear Models
 Version: 1.0
 Date: 2021-05-02
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
+Author: Yovna Junglee
+Maintainer: <yovna.junglee@uct.ac.za>
+Description: Bayesian implementation of the historical functional linear model with a lag parameter.
 License: What license is it under?
 Imports: Rcpp (>= 1.0.5)
 LinkingTo: Rcpp, RcppArmadillo

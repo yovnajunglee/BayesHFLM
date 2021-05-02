@@ -3,6 +3,7 @@
 \alias{rcpparma_innerproduct}
 \alias{rcpparma_outerproduct}
 \alias{rcpparma_bothproducts}
+\alias{simulate_hflm}
 \title{Set of functions in example RcppArmadillo package}
 \description{
   These four functions are created when
@@ -14,6 +15,7 @@ rcpparma_hello_world()
 rcpparma_outerproduct(x)
 rcpparma_innerproduct(x)
 rcpparma_bothproducts(x)
+simulate_hflm(x)
 }
 \arguments{
   \item{x}{a numeric vector}

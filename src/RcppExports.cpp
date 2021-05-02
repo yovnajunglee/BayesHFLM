@@ -49,12 +49,36 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// myfirstfunc
+arma::mat myfirstfunc();
+RcppExport SEXP _BayesHFLM_myfirstfunc() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(myfirstfunc());
+    return rcpp_result_gen;
+END_RCPP
+}
+// sampleMVN
+arma::mat sampleMVN(arma::vec ell, arma::mat Qc);
+RcppExport SEXP _BayesHFLM_sampleMVN(SEXP ellSEXP, SEXP QcSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type ell(ellSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Qc(QcSEXP);
+    rcpp_result_gen = Rcpp::wrap(sampleMVN(ell, Qc));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_rcpparma_hello_world", (DL_FUNC) &_BayesHFLM_rcpparma_hello_world, 0},
     {"_BayesHFLM_rcpparma_outerproduct", (DL_FUNC) &_BayesHFLM_rcpparma_outerproduct, 1},
     {"_BayesHFLM_rcpparma_innerproduct", (DL_FUNC) &_BayesHFLM_rcpparma_innerproduct, 1},
     {"_BayesHFLM_rcpparma_bothproducts", (DL_FUNC) &_BayesHFLM_rcpparma_bothproducts, 1},
+    {"_BayesHFLM_myfirstfunc", (DL_FUNC) &_BayesHFLM_myfirstfunc, 0},
+    {"_BayesHFLM_sampleMVN", (DL_FUNC) &_BayesHFLM_sampleMVN, 2},
     {NULL, NULL, 0}
 };
 

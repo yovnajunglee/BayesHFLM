@@ -1,5 +1,4 @@
-\name{BayesHFLM-package}
-\alias{BayesHFLM-package}
+\name{BayesHFLM}
 \alias{BayesHFLM}
 \docType{package}
 \title{
