@@ -74,11 +74,31 @@ arma::mat sampleMVN(arma::vec ell, arma::mat Qc) {
     return vals;
 }
 
+// Make matrix N x T out of a vector NT X 1
+// [[Rcpp::export]]
+arma::mat data_matrix(arma::mat mymat, int nc, int nr){
+  
+  int pos = 0;
+  arma::mat datmat(nr, nc);
+  
+  for (int i = 0; i < nr ; ++i){
+    //std::cout << mymat.rows(pos, pos + nc - 1) << std::endl;
+    datmat.row(i) = mymat.rows(pos, (pos+nc-1)).t();
+    pos = pos+nc;
+    //std::cout << pos << std::endl;
+    
+  }
+  
+  return datmat;
+}
+
+
+
 
 // Construct X matrix for 
 // HFLM 
 // [[Rcpp::export]]
-arma::mat constructMatrix(arma::vec Xvec, arma::colvec taus,
+arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
                           arma::colvec Ss, arma::mat Fk, arma::mat Fk1, 
                           arma::mat Psi, double delta, int nobs){
     // Evaluate no. of observations
@@ -88,51 +108,52 @@ arma::mat constructMatrix(arma::vec Xvec, arma::colvec taus,
     int U = Psi.n_cols;
     int K = Fk.n_cols;
     // Initialise matrix
+    arma::mat Xmat = data_matrix(Xvec, ntau, nobs);
     arma::mat Xtil(totals, U);
     
-    //int temp = 0;
-    
-    //for (int i = 0; i < nobs; ++i){
-      //  for (int j = 0; j < ntau; ++j){
-        //    double xij = Xmat(i, j) ; 
-          //  double tauval = taus(j);
-            //for (int u = 0; u < U; ++u){
-              //  double intval = 0; 
-                //for (int s = 0; s < ntau; ++s){
-                  //  double psival = Psi(s, u);
-                    //double sval = Ss(s);
-                      //  if (sval >= (tauval - delta) && sval <= (tauval)){
-                        //    intval = intval + xij*psival;
-                        //}else{
-                         //   intval = intval + 0;
-                        //}
-                //}
-                //Xtil(temp,u) = intval/ntau;
-        //    }
-         //  temp++;
-    //    }
-//    }
+    int temp = 0;
+
+    for (int i = 0; i < nobs; ++i){
+        for (int j = 0; j < ntau; ++j){
+            //double xij = Xmat(i, j) ;
+            double tauval = taus(j);
+            for (int u = 0; u < U; ++u){
+                double intval = 0;
+                for (int s = 0; s < ntau; ++s){
+                    double psival = Psi(s, u);
+                    double sval = Ss(s);
+                        if (sval >= (tauval - delta) && sval <= (tauval)){
+                            intval = intval + Xmat(i,s)*psival;
+                        }else{
+                            intval = intval + 0;
+                        }
+                }
+                Xtil(temp,u) = intval/ntau;
+            }
+           temp++;
+        }
+    }
     
     arma::mat tau_mat = repmat(taus, nobs ,1);
     //std::cout << "in construct matrix ... " << std::endl;
     
-    for(int i = 0; i < totals; ++i){
-        double xij = Xvec(i);
-        double tauval = tau_mat(i);
-        for (int u = 0; u < U; ++u){
-            double intval = 0; 
-            for (int s = 0; s < ntau; ++s){
-                double psival = Psi(s, u);
-                double sval = Ss(s);
-                if (sval >= (tauval - delta) && sval <= (tauval)){
-                    intval = intval + xij*psival;
-                }else{
-                    intval = intval + 0;
-                }
-            }
-            Xtil(i,u) = intval/ntau;
-        }
-    }
+    //for(int i = 0; i < totals; ++i){
+      //  double xij = Xvec(i);
+        //double tauval = tau_mat(i);
+        //for (int u = 0; u < U; ++u){
+          //  double intval = 0; 
+            //for (int s = 0; s < ntau; ++s){
+              //  double psival = Psi(s, u);
+              //  double sval = Ss(s);
+                //if (sval >= std::max((tauval - delta),0.0) && sval <= (tauval)){
+                  //  intval = intval + xij*psival;
+              //  }else{
+              //      intval = intval + 0;
+              //  }
+          //  }
+          //  Xtil(i,u) = intval/ntau;
+      //  }
+  //  }
     
    arma::mat FF  = repmat(Fk, nobs, 1);
    arma::mat XX(totals, U*K);
@@ -150,6 +171,7 @@ arma::mat constructMatrix(arma::vec Xvec, arma::colvec taus,
   return Rmat;
 }
 // works 
+
 
 
 // MCMC sampler
@@ -254,21 +276,21 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
         Omegaf = repmat(sigs,1, Dalpha.n_cols)%Dalpha; 
         //std::cout << " sigmaalphas ... " << std::endl;
         
-        SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat) + 0.000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
+        SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat) + 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
         //std::cout << "mu  alphas ... " << std::endl;
         //std::cout << Omegaf.is_symmetric() << std::endl;
         //std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
         
         muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
         alpha_sample = sampleMVN(muAlpha, SigmaAlph);
-        
+        std::cout << alpha_sample << std::endl;
         // Generate the sigmas
         //std::cout << "Sampling sigma  ... " << std::endl;
         //std::cout << "shape e ... " << std::endl;
           shape_e = ntaus*nobs/2 + i1;
         
         //std::cout << "rate e ... " << std::endl;
-          rate_e = i2 + 0.5*as_scalar((Yvec- Rmat*alpha_sample).t()*(Yvec - Rmat*alpha_sample));
+          rate_e = i2 + 0.5*as_scalar((Yvec- (Rmat*alpha_sample)).t()*(Yvec - (Rmat*alpha_sample)));
           sigma_e_sample = 1/arma::randg<double>( distr_param(shape_e,1/rate_e));
             //(Rcpp::rgamma(1, shape_e, 1/rate_e));
         //std::cout << "shape mu ... " << std::endl;
@@ -293,7 +315,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
           sigma_v_sample = 1/arma::randg<double>( distr_param(shape_v,1/rate_v));
         //std::cout << "shape c ... " << std::endl;
         
-          shape_c = Kphi - nobs + a;
+          shape_c = (Kphi - nobs)/2 + a;
         //std::cout << "rate c ... " << std::endl;
         
           rate_c = b + 0.5*as_scalar((c_sample.t()*Dc*c_sample));

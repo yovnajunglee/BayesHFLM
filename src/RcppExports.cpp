@@ -71,13 +71,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// data_matrix
+arma::mat data_matrix(arma::mat mymat, int nc, int nr);
+RcppExport SEXP _BayesHFLM_data_matrix(SEXP mymatSEXP, SEXP ncSEXP, SEXP nrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type mymat(mymatSEXP);
+    Rcpp::traits::input_parameter< int >::type nc(ncSEXP);
+    Rcpp::traits::input_parameter< int >::type nr(nrSEXP);
+    rcpp_result_gen = Rcpp::wrap(data_matrix(mymat, nc, nr));
+    return rcpp_result_gen;
+END_RCPP
+}
 // constructMatrix
-arma::mat constructMatrix(arma::vec Xvec, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, double delta, int nobs);
+arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, double delta, int nobs);
 RcppExport SEXP _BayesHFLM_constructMatrix(SEXP XvecSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP deltaSEXP, SEXP nobsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type Xvec(XvecSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Xvec(XvecSEXP);
     Rcpp::traits::input_parameter< arma::colvec >::type taus(tausSEXP);
     Rcpp::traits::input_parameter< arma::colvec >::type Ss(SsSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Fk(FkSEXP);
@@ -127,6 +140,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_rcpparma_bothproducts", (DL_FUNC) &_BayesHFLM_rcpparma_bothproducts, 1},
     {"_BayesHFLM_myfirstfunc", (DL_FUNC) &_BayesHFLM_myfirstfunc, 0},
     {"_BayesHFLM_sampleMVN", (DL_FUNC) &_BayesHFLM_sampleMVN, 2},
+    {"_BayesHFLM_data_matrix", (DL_FUNC) &_BayesHFLM_data_matrix, 3},
     {"_BayesHFLM_constructMatrix", (DL_FUNC) &_BayesHFLM_constructMatrix, 8},
     {"_BayesHFLM_mcmc_sampler", (DL_FUNC) &_BayesHFLM_mcmc_sampler, 20},
     {NULL, NULL, 0}
