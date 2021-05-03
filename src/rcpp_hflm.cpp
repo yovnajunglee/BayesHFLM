@@ -213,19 +213,19 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
     arma::mat alpha_sample(dr, 1);
     double shape_e;
     double rate_e;
-    double sigma_e;
+    double sigma_e_sample;
     double shape_mu;
     double rate_mu;
-    double sigma_mu;
+    double sigma_mu_sample;
     double shape_b;
     double rate_b;
-    double sigma_b;
+    double sigma_b_sample;
     double shape_c;
     double rate_c;
-    double sigma_c;
+    double sigma_c_sample;
     double shape_v;
     double rate_v;
-    double sigma_v;
+    double sigma_v_sample;
     
     for (int iter = 1; iter < niter; ++iter){
         std::cout << "Iteration "<< iter << std::endl;
@@ -258,8 +258,8 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
         //std::cout << Omegaf.is_symmetric() << std::endl;
         //std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
         
-        muAlph = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
-        alpha_sample = sampleMVN(muAlph, SigmaAlph);
+        muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
+        alpha_sample = sampleMVN(muAlpha, SigmaAlph);
         
         // Generate the sigmas
         //std::cout << "Sampling sigma  ... " << std::endl;
