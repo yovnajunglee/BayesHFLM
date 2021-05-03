@@ -25,3 +25,7 @@ sampleMVN <- function(ell, Qc) {
     .Call(`_BayesHFLM_sampleMVN`, ell, Qc)
 }
 
+constructMatrix <- function(Xmat, taus, Ss, Fk, Psi, delta) {
+    .Call(`_BayesHFLM_constructMatrix`, Xmat, taus, Ss, Fk, Psi, delta)
+}
+

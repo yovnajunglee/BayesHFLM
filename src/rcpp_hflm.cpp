@@ -75,3 +75,57 @@ arma::mat sampleMVN(arma::vec ell, arma::mat Qc) {
 }
 
 
+// Construct X matrix for 
+// HFLM 
+// [[Rcpp::export]]
+Rcpp::List constructMatrix(arma::mat Xmat, arma::colvec taus,
+                          arma::colvec Ss, arma::mat Fk, 
+                          arma::mat Psi, int delta){
+    // Evaluate no. of observations
+    int ntau = Xmat.n_cols;
+    int nobs = Xmat.n_rows;
+    int totals = ntau*nobs;
+    int U = Psi.n_cols;
+    int K = Fk.n_cols;
+    // Initialise matrix
+    arma::mat Xtil(totals, U);
+    
+    int temp = 0;
+    
+    for (int i = 0; i < nobs; ++i){
+        for (int j = 0; j < ntau; ++j){
+            double xij = Xmat(i, j) ; 
+            double tauval = taus(j);
+            for (int u = 0; u < U; ++u){
+                double intval = 0; 
+                for (int s = 0; s < ntau; ++s){
+                    double psival = Psi(s, u);
+                    double sval = Ss[s];
+                        if (sval >= (tauval - delta) && sval <= (tauval)){
+                            intval = intval + xij*psival;
+                        }else{
+                            intval = intval + 0;
+                        }
+                }
+                Xtil(temp,u) = intval/ntau;
+            }
+           temp++;
+        }
+    }
+    
+   arma::mat FF  = repmat(Fk, nobs, 1);
+   arma::mat XX(totals, U*K);
+        
+   int temp1 = 0;
+   for(int k = 0 ; k < K; ++k){
+       for(int u = 0; u < U; ++u){
+           XX.col(temp1) = Xtil.col(u) % FF.col(k);
+           temp1 = temp1 + 1;
+       }
+   }
+   
+   return Rcpp::List::create(Rcpp::Named("Xt")=Xtil,
+                             Rcpp::Named("FF")=FF,
+                             Rcpp::Named("XX")=XX);
+}
+// works 

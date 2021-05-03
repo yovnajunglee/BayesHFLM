@@ -14,10 +14,50 @@ cholR <- function(ell_c, Q_c){
 }
 
 
+# Calculate the x matrix for the lag functional linear model
+create.design.matrix <- function(Xmat, ntaus, Ss, nobs, U, K, Fk, Psi, delta){
+  # Evaluate the integral using Riemann Sums
+  Xtilde <- matrix(NA, nrow = ntaus*nobs, ncol = U)
+  temp <- 1
+  tau.mat <- 
+  
+  
+  Xlong <- apply(Xmat, 1, function(x) matrix(rep(x,each=nobs), ncol=nobs, byrow=F))
+  
+  
+  for(i in 1:nobs){
+    for(tauj in taus){
+      # Find  tauj -delta  < s < tauj
+      int_over <- which(Ss <= tauj & Ss >= max(tauj-delta,0))
+      Xi.tauj <- Xmat[i,int_over]
+      for(u in 1:U){
+        Xtilde[temp, u] <- (sum(Xi.tauj*Psi[int_over,u]))/ntaus
+      }
+      temp <- temp + 1
+    }
+  }
+  #  Outer product with F
+  FF <- kronecker(rep(1,nobs), Fk)
+  Xast <- matrix(NA, nrow = ntaus*nobs, ncol = U*K)
+  temp1 <- 1
+  for(obsn in 1:nrow(Xtilde)){
+    temp1 <- 1
+    for(k in 1:K){
+      Xast[obsn, (temp1:(temp1+U-1))] <- Xtilde[obsn,]*FF[obsn,k]
+      temp1 <- temp1 + U
+    }
+  }
+  # Intercept term
+  Xast <- cbind(1, FF1, Xast) 
+  return(Xast)
+}
+
+
+
 # Function to fit a Bayesian LFLM
 
 
-bfflm <- function(Ymat, Xmat, tau, Ss, 
+hfflm <- function(Ymat, Xmat, tau, Ss, 
                   interceptInfo = list("Fk","K", "Dmu"),
                   tensorInfo = list("Fk","Psi","U","K", "Db"),
                   PhiInfo = list("Phi","U", "Dc"),
@@ -33,6 +73,6 @@ bfflm <- function(Ymat, Xmat, tau, Ss,
   
   
   #-------------------------------------
-  # Set 
+  # 
   #-------------------------------------
 }

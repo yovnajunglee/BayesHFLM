@@ -95,11 +95,11 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25, delta = 0.5,
   if(plot){
     par(mfrow=c(1,3))
     plot(Y.tau[1,], type = 'l', ylim = c(-2,10))
-    for(i in 2:30){
+    for(i in 2:nobs){
       lines(Y.tau[i,], type = 'l')
     }
     plot(X.tau[1,], type = 'l', ylim = c(-20,20))
-    for(i in 1:30){
+    for(i in 1:nobs){
       lines(X.tau[i,], type = 'l')
     }
     contour(theta.s.tau)

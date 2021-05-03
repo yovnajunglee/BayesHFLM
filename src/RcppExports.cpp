@@ -71,6 +71,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// constructMatrix
+Rcpp::List constructMatrix(arma::mat Xmat, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Psi, int delta);
+RcppExport SEXP _BayesHFLM_constructMatrix(SEXP XmatSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP PsiSEXP, SEXP deltaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Xmat(XmatSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type taus(tausSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type Ss(SsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Fk(FkSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Psi(PsiSEXP);
+    Rcpp::traits::input_parameter< int >::type delta(deltaSEXP);
+    rcpp_result_gen = Rcpp::wrap(constructMatrix(Xmat, taus, Ss, Fk, Psi, delta));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_rcpparma_hello_world", (DL_FUNC) &_BayesHFLM_rcpparma_hello_world, 0},
@@ -79,6 +95,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_rcpparma_bothproducts", (DL_FUNC) &_BayesHFLM_rcpparma_bothproducts, 1},
     {"_BayesHFLM_myfirstfunc", (DL_FUNC) &_BayesHFLM_myfirstfunc, 0},
     {"_BayesHFLM_sampleMVN", (DL_FUNC) &_BayesHFLM_sampleMVN, 2},
+    {"_BayesHFLM_constructMatrix", (DL_FUNC) &_BayesHFLM_constructMatrix, 6},
     {NULL, NULL, 0}
 };
 
