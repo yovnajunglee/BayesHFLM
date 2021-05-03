@@ -25,11 +25,11 @@ sampleMVN <- function(ell, Qc) {
     .Call(`_BayesHFLM_sampleMVN`, ell, Qc)
 }
 
-constructMatrix <- function(Xvec, taus, Ss, Fk, Psi, delta, nobs) {
-    .Call(`_BayesHFLM_constructMatrix`, Xvec, taus, Ss, Fk, Psi, delta, nobs)
+constructMatrix <- function(Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs) {
+    .Call(`_BayesHFLM_constructMatrix`, Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs)
 }
 
-mcmc_sampler <- function(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, niter) {
-    .Call(`_BayesHFLM_mcmc_sampler`, Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, niter)
+mcmc_sampler <- function(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, niter) {
+    .Call(`_BayesHFLM_mcmc_sampler`, Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, niter)
 }
 
