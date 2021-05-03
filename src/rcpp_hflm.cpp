@@ -160,7 +160,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
                         arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat Phi,
                         arma::mat Dmu, arma::mat Db, arma::mat Dalpha,
                         arma::mat Dc, double delta,
-                        double i1, double i2, int niter){
+                        double i1, double i2, double a, double b, int niter){
     
     // Set parameters
     int nobs = Ymat.n_rows;
@@ -233,6 +233,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
         //std::cout << "Sampling c ... " << std::endl;
         //std::cout << "Qc ... " << std::endl;
         
+        // this takes long
         Qc = Dc*(1/as_scalar(sigma_c.col(iter - 1))) + (1/as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Phi;
         //std::cout << "ell... " << std::endl;
         
@@ -245,7 +246,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
         Rmat  = constructMatrix(Xsample, taus, Ss, Fk, Fk1, Psi, delta, nobs);
         
         // Create vector sigmas
-        sigs = join_vert(ones(K + 1, 1)*(1/as_scalar(sigma_mu.col(iter -1))),
+        sigs = join_vert(ones(K + 1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
                                    ones(U*K, 1)*(1/as_scalar(sigma_b.col(iter -1))));
         //std::cout << "Sampling alphas ... " << std::endl;
         //std::cout << "omegaf ... " << std::endl;
@@ -271,17 +272,17 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
           sigma_e_sample = 1/arma::randg<double>( distr_param(shape_e,1/rate_e));
             //(Rcpp::rgamma(1, shape_e, 1/rate_e));
         //std::cout << "shape mu ... " << std::endl;
-          shape_mu = K/2 + i1;
+          shape_mu = K/2 + a;
         
         //std::cout << "rate mu ... " << std::endl;
-          rate_mu = i2 + 0.5*as_scalar((alpha_sample.rows(0, K).t()*Dmu*alpha_sample.rows(0, K)));
+          rate_mu = b + 0.5*as_scalar((alpha_sample.rows(0, K).t()*Dmu*alpha_sample.rows(0, K)));
           sigma_mu_sample =  1/arma::randg<double>(distr_param(shape_mu,1/rate_mu));
         
         //std::cout << "shape b ... " << std::endl;
-          shape_b = U*K/2 + i1;
+          shape_b = U*K/2 + a;
         //std::cout << "rate b ... " << std::endl;
         
-          rate_b = i2 + 0.5*as_scalar((alpha_sample.rows(K+1, U*K + K).t()*Db*alpha_sample.rows(K+1, U*K + K)));
+          rate_b = b + 0.5*as_scalar((alpha_sample.rows(K+1, U*K + K).t()*Db*alpha_sample.rows(K+1, U*K + K)));
           sigma_b_sample =  1/arma::randg<double>( distr_param(shape_b,1/rate_b));
         //std::cout << "shape v ... " << std::endl;
         
@@ -292,10 +293,10 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
           sigma_v_sample = 1/arma::randg<double>( distr_param(shape_v,1/rate_v));
         //std::cout << "shape c ... " << std::endl;
         
-          shape_c = Kphi - nobs + i1;
+          shape_c = Kphi - nobs + a;
         //std::cout << "rate c ... " << std::endl;
         
-          rate_c = i2 + 0.5*as_scalar((c_sample.t()*Dc*c_sample));
+          rate_c = b + 0.5*as_scalar((c_sample.t()*Dc*c_sample));
           sigma_c_sample = 1/arma::randg<double>( distr_param(shape_c,1/rate_c));
         
         // Store values
