@@ -78,9 +78,9 @@ arma::mat sampleMVN(arma::vec ell, arma::mat Qc) {
 // Construct X matrix for 
 // HFLM 
 // [[Rcpp::export]]
-Rcpp::List constructMatrix(arma::mat Xmat, arma::colvec taus,
+arma::mat constructMatrix(arma::mat Xmat, arma::colvec taus,
                           arma::colvec Ss, arma::mat Fk, 
-                          arma::mat Psi, int delta){
+                          arma::mat Psi, double delta){
     // Evaluate no. of observations
     int ntau = Xmat.n_cols;
     int nobs = Xmat.n_rows;
@@ -100,7 +100,7 @@ Rcpp::List constructMatrix(arma::mat Xmat, arma::colvec taus,
                 double intval = 0; 
                 for (int s = 0; s < ntau; ++s){
                     double psival = Psi(s, u);
-                    double sval = Ss[s];
+                    double sval = Ss(s);
                         if (sval >= (tauval - delta) && sval <= (tauval)){
                             intval = intval + xij*psival;
                         }else{
@@ -124,9 +124,8 @@ Rcpp::List constructMatrix(arma::mat Xmat, arma::colvec taus,
        }
    }
    
-   return Rcpp::List::create(Rcpp::Named("Xt")=Xtil,
-                             Rcpp::Named("FF")=FF,
-                             Rcpp::Named("XX")=XX);
+   arma::mat Rmat  =  join_horiz(ones(totals,1), FF, XX);
+  return Rmat;
 }
 // works 
 
@@ -135,4 +134,31 @@ Rcpp::List constructMatrix(arma::mat Xmat, arma::colvec taus,
 // [[Rcpp::export]]
 Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
                         arma::colvec Xvec, arma::mat Xmat, 
-                        arma::)
+                        arma::colvec taus, arma::colvec Ss,
+                        arma::mat Fk, arma::mat Psi, arma::mat Phi,
+                        arma::mat Dmu, arma::mat Db,
+                        arma::mat Dc, double delta,
+                        double i1, double i2, int niter){
+    
+    // Set parameters
+    int nobs = Ymat.n_rows;
+    int ntaus = Ymat.n_cols;
+    int K = Fk.n_cols;
+    int U = Psi.n_cols;
+    int Kphi  = Phi.n_cols;
+    int totals = nobs*ntaus;
+    
+    // Create Phi matrix
+    arma::mat Phi.rep  = repmat(Phi, nobs, 1);
+    
+    // Initialise parameters
+    arma::mat Rmat = constructMatrix(Xmat, taus, Ss, Fk, Psi, delta); 
+    arma::mat alpha(Rmat.n_cols, niter) ; 
+    alpha.col(0) = arma::randu(Rmat.n_cols);
+    
+    arma::mat csims(Phi.rep.n_cols, niter) ; 
+    csims.col(0) = arma::randu(csims.n_cols);
+    
+    
+    
+}
