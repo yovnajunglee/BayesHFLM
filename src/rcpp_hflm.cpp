@@ -129,3 +129,10 @@ Rcpp::List constructMatrix(arma::mat Xmat, arma::colvec taus,
                              Rcpp::Named("XX")=XX);
 }
 // works 
+
+
+// MCMC sampler
+// [[Rcpp::export]]
+Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
+                        arma::colvec Xvec, arma::mat Xmat, 
+                        arma::)

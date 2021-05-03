@@ -19,7 +19,7 @@
   
   \code{theta.s.tau} Regression surface..
   
-  \code{vary} Noise 
+  \code{vary} Noise s
   
 }
 \details{
