@@ -78,38 +78,58 @@ arma::mat sampleMVN(arma::vec ell, arma::mat Qc) {
 // Construct X matrix for 
 // HFLM 
 // [[Rcpp::export]]
-arma::mat constructMatrix(arma::mat Xmat, arma::colvec taus,
+arma::mat constructMatrix(arma::vec Xvec, arma::colvec taus,
                           arma::colvec Ss, arma::mat Fk, 
-                          arma::mat Psi, double delta){
+                          arma::mat Psi, double delta, int nobs){
     // Evaluate no. of observations
-    int ntau = Xmat.n_cols;
-    int nobs = Xmat.n_rows;
+    int ntau = taus.n_elem; //Xmat.n_cols;
+    //int nobs = Xmat.n_rows;
     int totals = ntau*nobs;
     int U = Psi.n_cols;
     int K = Fk.n_cols;
     // Initialise matrix
     arma::mat Xtil(totals, U);
     
-    int temp = 0;
+    //int temp = 0;
     
-    for (int i = 0; i < nobs; ++i){
-        for (int j = 0; j < ntau; ++j){
-            double xij = Xmat(i, j) ; 
-            double tauval = taus(j);
-            for (int u = 0; u < U; ++u){
-                double intval = 0; 
-                for (int s = 0; s < ntau; ++s){
-                    double psival = Psi(s, u);
-                    double sval = Ss(s);
-                        if (sval >= (tauval - delta) && sval <= (tauval)){
-                            intval = intval + xij*psival;
-                        }else{
-                            intval = intval + 0;
-                        }
+    //for (int i = 0; i < nobs; ++i){
+      //  for (int j = 0; j < ntau; ++j){
+        //    double xij = Xmat(i, j) ; 
+          //  double tauval = taus(j);
+            //for (int u = 0; u < U; ++u){
+              //  double intval = 0; 
+                //for (int s = 0; s < ntau; ++s){
+                  //  double psival = Psi(s, u);
+                    //double sval = Ss(s);
+                      //  if (sval >= (tauval - delta) && sval <= (tauval)){
+                        //    intval = intval + xij*psival;
+                        //}else{
+                         //   intval = intval + 0;
+                        //}
+                //}
+                //Xtil(temp,u) = intval/ntau;
+        //    }
+         //  temp++;
+    //    }
+//    }
+    
+    arma::mat tau_mat = repmat(taus, nobs ,1);
+    
+    for(int i = 0; i < totals; ++i){
+        double xij = Xvec(i);
+        double tauval = tau_mat(i);
+        for (int u = 0; u < U; ++u){
+            double intval = 0; 
+            for (int s = 0; s < ntau; ++s){
+                double psival = Psi(s, u);
+                double sval = Ss(s);
+                if (sval >= (tauval - delta) && sval <= (tauval)){
+                    intval = intval + xij*psival;
+                }else{
+                    intval = intval + 0;
                 }
-                Xtil(temp,u) = intval/ntau;
             }
-           temp++;
+            Xtil(i,u) = intval/ntau;
         }
     }
     
@@ -124,7 +144,7 @@ arma::mat constructMatrix(arma::mat Xmat, arma::colvec taus,
        }
    }
    
-   arma::mat Rmat  =  join_horiz(ones(totals,1), FF, XX);
+   arma::mat Rmat  =  arma::join_horiz(arma::ones(totals,1), FF, XX);
   return Rmat;
 }
 // works 
@@ -132,7 +152,7 @@ arma::mat constructMatrix(arma::mat Xmat, arma::colvec taus,
 
 // MCMC sampler
 // [[Rcpp::export]]
-Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
+arma::mat mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
                         arma::colvec Xvec, arma::mat Xmat, 
                         arma::colvec taus, arma::colvec Ss,
                         arma::mat Fk, arma::mat Psi, arma::mat Phi,
@@ -149,16 +169,54 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
     int totals = nobs*ntaus;
     
     // Create Phi matrix
-    arma::mat Phi.rep  = repmat(Phi, nobs, 1);
-    
+    // arma::mat Phi_rep  = repmat(Phi, nobs, 1);
+    int dc = Phi.n_cols;
     // Initialise parameters
-    arma::mat Rmat = constructMatrix(Xmat, taus, Ss, Fk, Psi, delta); 
-    arma::mat alpha(Rmat.n_cols, niter) ; 
-    alpha.col(0) = arma::randu(Rmat.n_cols);
+    arma::mat Rmat = constructMatrix(Xvec, taus, Ss, Fk, Psi, delta); 
+    int dr = Rmat.n_cols; 
     
-    arma::mat csims(Phi.rep.n_cols, niter) ; 
-    csims.col(0) = arma::randu(csims.n_cols);
+    arma::mat alpha(dr, niter) ; 
+    alpha.col(0) = arma::randu(dr);
     
+    arma::mat csims(dc, niter) ; 
+    csims.col(0) = arma::randu(dc);
     
+    arma::mat sigma_e(1, niter);
+    sigma_e.col(0) = arma::randu(1);
     
+    arma::mat sigma_b(1, niter);
+    sigma_b.col(0) = arma::randu(1);
+    
+    arma::mat sigma_mu(1, niter);
+    sigma_mu.col(0) = arma::randu(1);
+    
+    arma::mat sigma_c(1, niter);
+    sigma_c.col(0) = arma::randu(1);
+    
+    arma::mat sigma_v(1, niter);
+    sigma_v.col(0) = arma::randu(1);
+    
+    for (int iter = 1; iter < niter; ++iter){
+        
+        // Sample c for smooth X
+        arma::mat Qc = Dc*(1/as_scalar(sigma_c.col(iter - 1))) + (1/as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Phi;
+        arma::vec ell = 1/(sigma_v.col(iter - 1))*Phi.t()*Xvec;
+        arma::mat c_sample = sampleMVN(ell, Qc);
+        arma::mat Xsample = Phi*c_sample;
+        Rmat  = constructMatrix(Xsample, taus, Ss, Fk, Psi, delta, nobs);
+        
+        // Create vector sigmas
+        arma::mat sigs = join_vert(ones(K + 1, 1)*(1/as_scalar(sigma_mu.col(iter -1))),
+                                   ones(U*K, 1)*(1/as_scalar(sigma_mu.col(iter -1))));
+        arma::mat Omegaf = sigs%Dalpha; 
+        arma::mat SigmaAlph = inv(Omegaf + (1/(as_scalar(sigma_e.col(iter - 1))))*t(Xsample)*Xsample)); //+ diag(0.0000001,U+nfixed+U*K))
+        arma::mat muAlph = (1/(as_scalar(sigma_e.col(iter - 1))))*SigmaAlph*t(Xsample)*Yvec;
+        arma::mat alpha_sample = sampleMVN(muAlph, SigmaAlph);
+        
+        // Generate the sigmas
+        
+        
+    }
+    
+    return sigma_c; 
 }
