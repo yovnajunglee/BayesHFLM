@@ -89,8 +89,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // mcmc_sampler
-arma::mat mcmc_sampler(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Psi, arma::mat Phi, arma::mat Dmu, arma::mat Db, arma::mat Dc, double delta, double i1, double i2, int niter);
-RcppExport SEXP _BayesHFLM_mcmc_sampler(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP PsiSEXP, SEXP PhiSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DcSEXP, SEXP deltaSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP niterSEXP) {
+Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Psi, arma::mat Phi, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, double delta, double i1, double i2, int niter);
+RcppExport SEXP _BayesHFLM_mcmc_sampler(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP PsiSEXP, SEXP PhiSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP deltaSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP niterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -105,12 +105,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type Phi(PhiSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Dmu(DmuSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Db(DbSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dalpha(DalphaSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Dc(DcSEXP);
     Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
     Rcpp::traits::input_parameter< double >::type i1(i1SEXP);
     Rcpp::traits::input_parameter< double >::type i2(i2SEXP);
     Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
-    rcpp_result_gen = Rcpp::wrap(mcmc_sampler(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Psi, Phi, Dmu, Db, Dc, delta, i1, i2, niter));
+    rcpp_result_gen = Rcpp::wrap(mcmc_sampler(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, niter));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -123,7 +124,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_myfirstfunc", (DL_FUNC) &_BayesHFLM_myfirstfunc, 0},
     {"_BayesHFLM_sampleMVN", (DL_FUNC) &_BayesHFLM_sampleMVN, 2},
     {"_BayesHFLM_constructMatrix", (DL_FUNC) &_BayesHFLM_constructMatrix, 7},
-    {"_BayesHFLM_mcmc_sampler", (DL_FUNC) &_BayesHFLM_mcmc_sampler, 16},
+    {"_BayesHFLM_mcmc_sampler", (DL_FUNC) &_BayesHFLM_mcmc_sampler, 17},
     {NULL, NULL, 0}
 };
 

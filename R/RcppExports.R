@@ -29,7 +29,7 @@ constructMatrix <- function(Xvec, taus, Ss, Fk, Psi, delta, nobs) {
     .Call(`_BayesHFLM_constructMatrix`, Xvec, taus, Ss, Fk, Psi, delta, nobs)
 }
 
-mcmc_sampler <- function(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Psi, Phi, Dmu, Db, Dc, delta, i1, i2, niter) {
-    .Call(`_BayesHFLM_mcmc_sampler`, Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Psi, Phi, Dmu, Db, Dc, delta, i1, i2, niter)
+mcmc_sampler <- function(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, niter) {
+    .Call(`_BayesHFLM_mcmc_sampler`, Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, niter)
 }
 
