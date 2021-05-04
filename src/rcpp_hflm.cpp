@@ -166,8 +166,11 @@ arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
        }
    }
    arma::mat FF1  = repmat(Fk1, nobs, 1);
+   //arma::mat tau2 = tau_mat%tau_mat;
+   //arma::mat tau3 = tau2%tau_mat;
    
    arma::mat Rmat  =  arma::join_horiz(arma::ones(totals,1), FF1, XX);
+   //Rmat = arma::join_horiz(Rmat,FF1, XX);
   return Rmat;
 }
 // works 
@@ -252,34 +255,34 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
     for (int iter = 1; iter < niter; ++iter){
         std::cout << "Iteration "<< iter << std::endl;
         // Sample c for smooth X
-        //std::cout << "Sampling c ... " << std::endl;
-        //std::cout << "Qc ... " << std::endl;
+        std::cout << "Sampling c ... " << std::endl;
+        std::cout << "Qc ... " << std::endl;
         
-        // this takes long
-        Qc = Dc*(1/as_scalar(sigma_c.col(iter - 1))) + (1/as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Phi;
-        //std::cout << "ell... " << std::endl;
+        //this takes long
+        Qc = Dc*(1/as_scalar(sigma_c.col(iter - 1))) + (1/as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Phi+ 0.0000001*arma::eye(dc,dc);;
+        std::cout << "ell... " << std::endl;
         
         ell = 1/(as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Xvec;
-        //std::cout << "Sample mvn ... " << std::endl;
+        std::cout << "Sample mvn ... " << std::endl;
         
         c_sample = sampleMVN(ell, Qc);
         Xsample = Phi*c_sample;
-        //std::cout << "Constructing new R ..." << std::endl;
+        std::cout << "Constructing new R ..." << std::endl;
         Rmat  = constructMatrix(Xsample, taus, Ss, Fk, Fk1, Psi, delta, nobs);
         
         // Create vector sigmas
         sigs = join_vert(ones(K + 1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
                                    ones(U*K, 1)*(1/as_scalar(sigma_b.col(iter -1))));
-        //std::cout << "Sampling alphas ... " << std::endl;
-        //std::cout << "omegaf ... " << std::endl;
+        std::cout << "Sampling alphas ... " << std::endl;
+        std::cout << "omegaf ... " << std::endl;
         
         Omegaf = repmat(sigs,1, Dalpha.n_cols)%Dalpha; 
-        //std::cout << " sigmaalphas ... " << std::endl;
+        std::cout << " sigmaalphas ... " << std::endl;
         
         SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat) + 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
-        //std::cout << "mu  alphas ... " << std::endl;
-        //std::cout << Omegaf.is_symmetric() << std::endl;
-        //std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
+        std::cout << "mu  alphas ... " << std::endl;
+        std::cout << Omegaf.is_symmetric() << std::endl;
+        std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
         
         muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
         alpha_sample = sampleMVN(muAlpha, SigmaAlph);

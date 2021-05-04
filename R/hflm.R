@@ -1,5 +1,9 @@
 ### Functions in the  R package
 
+
+library(mgcv)
+library(MASS)
+
 myRfunc <- function(){
   print("hello R")
 }
@@ -53,6 +57,22 @@ create.design.matrix <- function(Xmat, ntaus, Ss, nobs, U, K, Fk, Psi, delta){
 }
 
 
+# Construct regression surface from the vector
+# of coefficients
+reconstruct.surface <- function(buk, K, U, ntaus){
+  buk.mat <- matrix(buk[-c(1:(K+1))], ncol = K, nrow = U, byrow = FALSE) # U X K
+  # Reconstruct thetas
+  theta.hat <- matrix(NA, nrow = ntaus, ncol = ntaus)
+  for(ss in 1:ntaus){
+    for(tj in 1:ntaus){
+      theta.hat[ss,tj] <- t(Psi[ss,])%*%buk.mat%*%(Fk[tj,])
+    }
+  }
+  # Intercept terms
+  muhat <- matrix(cbind(1, FF)%*%buk[1:(K+nfixed)], ncol = ntaus, byrow = TRUE)
+  return(list(theta.hat = theta.hat, mu.hat = muhat))
+}
+
 
 # Function to fit a Bayesian LFLM
 
@@ -76,3 +96,7 @@ hfflm <- function(Ymat, Xmat, tau, Ss,
   # 
   #-------------------------------------
 }
+
+
+
+
