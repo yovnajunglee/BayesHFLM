@@ -49,7 +49,7 @@ create.lag.matrix <- function(delta, taus, S, ntaus){
 
 # Calculate error for Y using the expected signal 
 # ratio
-calculate.error <- function(eSNR = 5, yij, nobs, n.tau){
+calculate.error <- function(eSNR = 5, yij, nobs, n.tau, ntest = 10){
   # Yij is N X T
   # Find the mean of each column (mean of each taus){} Y.j
   A <- apply(yij, 2, function(x) sum(x)/nobs)
@@ -72,8 +72,8 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25, delta = 0.5,
   tau.mat <- matrix(rep(taus,each=nobs), ncol=nobs, byrow=TRUE)
 
   # Within-curve errors
-  u <-  matrix(rep(rnorm(nobs, 10,sqrt(4)),each=n.tau),nrow=n.tau)
-  v <-  matrix(rep(rnorm(nobs, 2,sqrt(4)),each=n.tau),nrow=n.tau)
+  u <-  matrix(rep(rnorm(nobs, 10,4),each=n.tau),nrow=n.tau)
+  v <-  matrix(rep(rnorm(nobs, 10,4),each=n.tau),nrow=n.tau)
 
   X.tau <- u*sin(2*pi*tau.mat)+v*cos(2*pi*tau.mat) 
   
@@ -82,7 +82,8 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25, delta = 0.5,
                                 mean = 0 , sd = sqrt(varx)),
                           ncol = nobs, nrow = n.tau))
   # Intercept term
-  mutau <- exp((-t(tau.mat)-0.5)^2)
+  mutau <- 10*exp(-(2*(t(tau.mat)-0.5))^2)
+  #-2*sin(4*pi*t(tau.mat))
   
   Y.tau <- mutau + X.tau%*%theta.s.tau/n.tau
   # Generate IID error terms for Y_i(tau) (between curve errors)
@@ -94,7 +95,7 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25, delta = 0.5,
   
   if(plot){
     par(mfrow=c(1,3))
-    plot(Y.tau[1,], type = 'l', ylim = c(-2,10))
+    plot(Y.tau[1,], type = 'l')
     for(i in 2:nobs){
       lines(Y.tau[i,], type = 'l')
     }

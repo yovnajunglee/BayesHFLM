@@ -169,12 +169,11 @@ arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
    //arma::mat tau2 = tau_mat%tau_mat;
    //arma::mat tau3 = tau2%tau_mat;
    
-   arma::mat Rmat  =  arma::join_horiz(arma::ones(totals,1), FF1, XX);
+   arma::mat Rmat  =  arma::join_horiz(FF1, XX);
+    //arma::join_horiz(arma::ones(totals,1), FF1, XX);
    //Rmat = arma::join_horiz(Rmat,FF1, XX);
   return Rmat;
 }
-// works 
-
 
 
 // MCMC sampler
@@ -191,6 +190,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
     int nobs = Ymat.n_rows;
     int ntaus = Ymat.n_cols;
     int K = Fk.n_cols;
+    int K1 = Fk1.n_cols;
     int U = Psi.n_cols;
     int Kphi  = Phi.n_cols;
     int totals = nobs*ntaus;
@@ -260,10 +260,10 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
         
         //this takes long
         Qc = Dc*(1/as_scalar(sigma_c.col(iter - 1))) + (1/as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Phi+ 0.0000001*arma::eye(dc,dc);;
-        std::cout << "ell... " << std::endl;
+      //  std::cout << "ell... " << std::endl;
         
         ell = 1/(as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Xvec;
-        std::cout << "Sample mvn ... " << std::endl;
+      // std::cout << "Sample mvn ... " << std::endl;
         
         c_sample = sampleMVN(ell, Qc);
         Xsample = Phi*c_sample;
@@ -271,7 +271,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
         Rmat  = constructMatrix(Xsample, taus, Ss, Fk, Fk1, Psi, delta, nobs);
         
         // Create vector sigmas
-        sigs = join_vert(ones(K + 1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
+        sigs = join_vert(ones(K1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
                                    ones(U*K, 1)*(1/as_scalar(sigma_b.col(iter -1))));
         std::cout << "Sampling alphas ... " << std::endl;
         std::cout << "omegaf ... " << std::endl;
@@ -293,37 +293,37 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
           shape_e = ntaus*nobs/2 + i1;
         
         //std::cout << "rate e ... " << std::endl;
-          rate_e = i2 + 0.5*as_scalar((Yvec- (Rmat*alpha_sample)).t()*(Yvec - (Rmat*alpha_sample)));
+          rate_e = i2 + 0.5*as_scalar((Yvec - (Rmat*alpha_sample)).t()*(Yvec - (Rmat*alpha_sample)));
           sigma_e_sample = 1/arma::randg<double>( distr_param(shape_e,1/rate_e));
             //(Rcpp::rgamma(1, shape_e, 1/rate_e));
         //std::cout << "shape mu ... " << std::endl;
           shape_mu = K/2 + a;
         
         //std::cout << "rate mu ... " << std::endl;
-          rate_mu = b + 0.5*as_scalar((alpha_sample.rows(0, K).t()*Dmu*alpha_sample.rows(0, K)));
+          rate_mu = b + 0.5*as_scalar((alpha_sample.rows(0, K1-1).t()*Dmu*alpha_sample.rows(0, K1-1)));
           sigma_mu_sample =  1/arma::randg<double>(distr_param(shape_mu,1/rate_mu));
         
-        //std::cout << "shape b ... " << std::endl;
+          std::cout << "shape b ... " << std::endl;
           shape_b = U*K/2 + a;
-        //std::cout << "rate b ... " << std::endl;
+          std::cout << "rate b ... " << std::endl;
         
-          rate_b = b + 0.5*as_scalar((alpha_sample.rows(K+1, U*K + K).t()*Db*alpha_sample.rows(K+1, U*K + K)));
+          rate_b = b + 0.5*as_scalar((alpha_sample.rows(K1, U*K + K1 - 1).t()*Db*alpha_sample.rows(K1, U*K + K1 - 1)));
           sigma_b_sample =  1/arma::randg<double>( distr_param(shape_b,1/rate_b));
-        //std::cout << "shape v ... " << std::endl;
+          std::cout << "shape v ... " << std::endl;
         
-          shape_v =  ntaus*nobs/2 + i1;
-        //std::cout << "rate v ... " << std::endl;
-        
+         shape_v =  ntaus*nobs/2 + i1;
+         std::cout << "rate v ... " << std::endl;
+
           rate_v = i2 + 0.5*as_scalar(((Xvec - Xsample).t()*(Xvec - Xsample)));
           sigma_v_sample = 1/arma::randg<double>( distr_param(shape_v,1/rate_v));
-        //std::cout << "shape c ... " << std::endl;
-        
+          std::cout << "shape c ... " << std::endl;
+
           shape_c = (Kphi - nobs)/2 + a;
-        //std::cout << "rate c ... " << std::endl;
-        
+          std::cout << "rate c ... " << std::endl;
+
           rate_c = b + 0.5*as_scalar((c_sample.t()*Dc*c_sample));
           sigma_c_sample = 1/arma::randg<double>( distr_param(shape_c,1/rate_c));
-        
+
         // Store values
         alpha.col(iter) = alpha_sample;
         csims.col(iter) = c_sample;
@@ -344,4 +344,5 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
                               Rcpp::Named("sigmac") = sigma_c,
                               Rcpp::Named("sigmav") = sigma_v);
 }
+
 
