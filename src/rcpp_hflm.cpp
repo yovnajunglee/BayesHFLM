@@ -378,7 +378,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
     
     
     // ----- 
-    shape_c = (Kphi - nobs)/2 + a;
+    shape_c = (Kphi)/2 + a;
     std::cout << "rate c ... " << std::endl;
     rate_c = b + 0.5*as_scalar((c_sample.t()*Dc*c_sample));
     sigma_c_sample = 1/arma::randg<double>( distr_param(shape_c,1/rate_c));
