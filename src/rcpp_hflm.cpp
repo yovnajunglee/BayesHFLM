@@ -11,6 +11,7 @@
 #include "RcppEigen.h"
 #include <roptim.h>
 #include <cmath> 
+#include <iostream>
 using namespace arma;
 using namespace Numer;
 using namespace Eigen; 
@@ -188,47 +189,51 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
                         arma::mat Dc, double delta,
                         double i1, double i2, double a, double b, int niter){
   
-  // Set parameters
-  int nobs = Ymat.n_rows;
-  int ntaus = Ymat.n_cols;
-  int K = Fk.n_cols;
-  int K1 = Fk1.n_cols;
-  int U = Psi.n_cols;
-  int Kphi  = Phi.n_cols;
-  int totals = nobs*ntaus;
   
-  // Create Phi matrix
-  // arma::mat Phi_rep  = repmat(Phi, nobs, 1);
-  int dc = Phi.n_cols;
-  // Initialise parameters
-  //std::cout << "init Rmat ... " << std::endl;
+  // =======================================
+  // Find dimensions of matrices
+  // =======================================
+  
+  int nobs = Ymat.n_rows; // No. of curves
+  int ntaus = Ymat.n_cols; // Frequency of data
+  int K = Fk.n_cols; // Size of first basis function (wrt tau) [part of tensor product]
+  int K1 = Fk1.n_cols; // Size of basis function for intercept term
+  int U = Psi.n_cols; // Size of second basis function (wrt v) [part of tensor product]
+  int Kphi  = Phi.n_cols; // Basis functions for X smoothin
+  int totals = nobs*ntaus; 
+  int dc = Phi.n_cols;  // ??same as Kphi
+  
+  // =======================================
+  // Initialise parameters and create vectors/
+  // matrices to store estimates at each
+  // iteration
+  // =======================================
+
+  //std::cout << "initialise Rmat ... " << std::endl;
   arma::mat Rmat = constructMatrix(Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs); 
   int dr = Rmat.n_cols; 
   //std::cout << "Init alpha ... " << std::endl;
   arma::mat alpha(dr, niter) ; 
   alpha.col(0) = arma::randu(dr);
   //std::cout << "Init c... " << std::endl;
-  
   arma::mat csims(dc, niter) ; 
   csims.col(0) = arma::randu(dc);
   //std::cout << "Init sigma ... " << std::endl;
-  
   arma::mat sigma_e(1, niter);
-  sigma_e.col(0) = 10 ; //arma::randu(1);
-  
+  sigma_e.col(0) = 10 ; //arma::randu(1); // temporary
   arma::mat sigma_b(1, niter);
   sigma_b.col(0) = 10 ; //arma::randu(1);
-  
   arma::mat sigma_mu(1, niter);
   sigma_mu.col(0) = 10; // arma::randu(1);
-  
   arma::mat sigma_c(1, niter);
   sigma_c.col(0) = 10; // arma::randu(1);
-  
   arma::mat sigma_v(1, niter);
   sigma_v.col(0) = 10; // arma::randu(1);
   
-  // Define matrices used below
+  // =======================================
+  // Define matrices and objects
+  // used in the Gibbs sampler
+  // =======================================
   arma::mat Qc(Kphi, Kphi);
   arma::vec ell(Kphi); 
   arma::mat c_sample(Kphi, 1);
@@ -254,82 +259,135 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
   double rate_v;
   double sigma_v_sample;
   
+  
+  // =======================================
+  // Start of the Gibbs sampler
+  // =======================================
+  
   for (int iter = 1; iter < niter; ++iter){
     std::cout << "Iteration "<< iter << std::endl;
-    // Sample c for smooth X
+    
+    
+    
+    //  ----- Sample the smooth (x(v)) first
     std::cout << "Sampling c ... " << std::endl;
     std::cout << "Qc ... " << std::endl;
-    
     //this takes long
+    // Posterior covariance for [c|. ]
     Qc = Dc*(1/as_scalar(sigma_c.col(iter - 1))) + (1/as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Phi+ 0.0000001*arma::eye(dc,dc);;
     //  std::cout << "ell... " << std::endl;
-    
     ell = 1/(as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Xvec;
     // std::cout << "Sample mvn ... " << std::endl;
-    
+    // Sample using the Cholesky decomposition
     c_sample = sampleMVN(ell, Qc);
     Xsample = Phi*c_sample;
+    // Update R matrix using the new X(v) smooth samples
     std::cout << "Constructing new R ..." << std::endl;
     Rmat  = constructMatrix(Xsample, taus, Ss, Fk, Fk1, Psi, delta, nobs);
     
-    // Create vector sigmas
+    
+    
+    
+  
+    
+    // ----- Sampling the regression coefficients
+    // Create matrix of sigma_mu, sigma_b to simultaneously sample 
+    // the intercept and regression surface terms
+    // alpha = [mu^T B^T]
+    
+    
+    
     sigs = join_vert(ones(K1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
                      ones(U*K, 1)*(1/as_scalar(sigma_b.col(iter -1))));
     std::cout << "Sampling alphas ... " << std::endl;
     std::cout << "omegaf ... " << std::endl;
-    
-    Omegaf = repmat(sigs,1, Dalpha.n_cols)%Dalpha; 
+    Omegaf = repmat(sigs,1, Dalpha.n_cols)%Dalpha; // Copy the vector Dalpha.n_cols = K1 + UK times 
+    // Posterior covariance of [alpha|.  ]
     std::cout << " sigmaalphas ... " << std::endl;
-    
     SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat) + 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
-    std::cout << "mu  alphas ... " << std::endl;
-    std::cout << Omegaf.is_symmetric() << std::endl;
-    std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
+    // Check if symmetric
+    //std::cout << Omegaf.is_symmetric() << std::endl;
+    //std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
     
+    // NB : This is NOT the posterior mean; the L part in the cholesky stuff
+    std::cout << "mu  alphas ... " << std::endl;
     muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
     alpha_sample = sampleMVN(muAlpha, SigmaAlph);
     std::cout << alpha_sample << std::endl;
-    // Generate the sigmas
+    
+    
+    
+    
+    
+    
+    // ----- Generate the variance parameters
+    
+    
+    
+    
+    // ===== VARIANCE PARAMETERS FOR REGRESSION PART
+    
+    
+    
+    
+    // ----- 
     //std::cout << "Sampling sigma  ... " << std::endl;
     //std::cout << "shape e ... " << std::endl;
     shape_e = ntaus*nobs/2 + i1;
-    
     //std::cout << "rate e ... " << std::endl;
     rate_e = i2 + 0.5*as_scalar((Yvec - (Rmat*alpha_sample)).t()*(Yvec - (Rmat*alpha_sample)));
     sigma_e_sample = 1/arma::randg<double>( distr_param(shape_e,1/rate_e));
+    // ----- 
+    
+    
+    
+    // ----- 
     //(Rcpp::rgamma(1, shape_e, 1/rate_e));
     //std::cout << "shape mu ... " << std::endl;
     shape_mu = K/2 + a;
-    
     //std::cout << "rate mu ... " << std::endl;
     rate_mu = b + 0.5*as_scalar((alpha_sample.rows(0, K1-1).t()*Dmu*alpha_sample.rows(0, K1-1)));
     sigma_mu_sample =  1/arma::randg<double>(distr_param(shape_mu,1/rate_mu));
+    // ----- 
     
-    std::cout << "shape b ... " << std::endl;
+    
+    // ----- 
+    //std::cout << "shape b ... " << std::endl;
     shape_b = U*K/2 + a;
-    std::cout << "rate b ... " << std::endl;
-    
+    //std::cout << "rate b ... " << std::endl;
     rate_b = b + 0.5*as_scalar((alpha_sample.rows(K1, U*K + K1 - 1).t()*Db*alpha_sample.rows(K1, U*K + K1 - 1)));
     sigma_b_sample =  1/arma::randg<double>( distr_param(shape_b,1/rate_b));
-    std::cout << "shape v ... " << std::endl;
+    // ----- 
     
+    
+    
+    
+    
+    // ===== VARIANCE PARAMETERS FOR X SMOOTHING PART
+    
+    
+    // ----- 
+    // [eta]
+    //std::cout << "shape v ... " << std::endl;
     shape_v =  ntaus*nobs/2 + i1;
     std::cout << "rate v ... " << std::endl;
-    
     rate_v = i2 + 0.5*as_scalar(((Xvec - Xsample).t()*(Xvec - Xsample)));
     sigma_v_sample = 1/arma::randg<double>( distr_param(shape_v,1/rate_v));
     std::cout << "shape c ... " << std::endl;
+    // ----- 
     
+    
+    // ----- 
     shape_c = (Kphi - nobs)/2 + a;
     std::cout << "rate c ... " << std::endl;
-    
     rate_c = b + 0.5*as_scalar((c_sample.t()*Dc*c_sample));
     sigma_c_sample = 1/arma::randg<double>( distr_param(shape_c,1/rate_c));
+    // ----- 
+  
     
-    // Store values
+    //  -------- Store values
     alpha.col(iter) = alpha_sample;
     csims.col(iter) = c_sample;
-    
     sigma_e.col(iter) = sigma_e_sample;
     sigma_mu.col(iter) = sigma_mu_sample;
     sigma_b.col(iter) = sigma_b_sample;
@@ -337,6 +395,11 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
     sigma_c.col(iter) = sigma_c_sample;
     
   }
+  
+  
+  // =======================================
+  // End of the Gibbs sampler
+  // =======================================
   
   return Rcpp::List::create(Rcpp::Named("alphas")=alpha,
                             Rcpp::Named("c")=csims,
@@ -348,9 +411,12 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
 }
 
 
+
+
+
 // MCMC sampler 
-// Parameter reparameterisation to obtain diagonal penalty matrices
-// for computation
+// reparameterisation to obtain diagonal penalty matrices
+// for faster computation
 // [[Rcpp::export]]
 Rcpp::List mcmc_sampler2(arma::colvec Yvec, arma::mat Ymat,
                          arma::colvec Xvec, arma::mat Xmat, 
@@ -360,19 +426,19 @@ Rcpp::List mcmc_sampler2(arma::colvec Yvec, arma::mat Ymat,
                          arma::mat Dc, double delta,
                          double i1, double i2, double a, double b, int niter){
   
-  // Set parameters
-  int nobs = Ymat.n_rows;
-  int ntaus = Ymat.n_cols;
-  int K = Fk.n_cols;
-  int K1 = Fk1.n_cols;
-  int U = Psi.n_cols;
-  int Kphi  = Phi.n_cols;
-  int totals = nobs*ntaus;
+  // =======================================
+  // Find dimensions
+  int nobs = Ymat.n_rows; // No. of curves
+  int ntaus = Ymat.n_cols; // Frequency of data
+  int K = Fk.n_cols; // Size of first basis function (wrt tau) [part of tensor product]
+  int K1 = Fk1.n_cols; // Size of basis function for intercept term
+  int U = Psi.n_cols; // Size of second basis function (wrt v) [part of tensor product]
+  int Kphi  = Phi.n_cols; // Basis functions for X smoothin
+  int totals = nobs*ntaus; 
+  int dc = Phi.n_cols;  // must remove
   
-  // Create Phi matrix
-  // arma::mat Phi_rep  = repmat(Phi, nobs, 1);
-  int dc = Phi.n_cols;
   // Initialise parameters
+  
   //std::cout << "init Rmat ... " << std::endl;
   arma::mat Rmat = constructMatrix(Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs); 
   int dr = Rmat.n_cols; 
@@ -380,7 +446,6 @@ Rcpp::List mcmc_sampler2(arma::colvec Yvec, arma::mat Ymat,
   arma::mat alpha(dr, niter) ; 
   alpha.col(0) = arma::randu(dr);
   //std::cout << "Init c... " << std::endl;
-  
   arma::mat csims(dc, niter) ; 
   csims.col(0) = arma::randu(dc);
   //std::cout << "Init sigma ... " << std::endl;
@@ -618,20 +683,22 @@ Rcpp::List mcmc_sampler3(arma::colvec Yvec, arma::mat Ymat,
                          arma::mat Dc, double delta,
                          double i1, double i2, double a, double b, int niter){
   
-  // Set parameters
+  
   int nobs = Ymat.n_rows;
   int ntaus = Ymat.n_cols;
+  // Find dimensions of basis matrices
   int K = Fk.n_cols;
   int K1 = Fk1.n_cols;
   int U = Psi.n_cols;
   int Kphi  = Phi.n_cols;
   int totals = nobs*ntaus;
-  
-  // Create Phi matrix
-  // arma::mat Phi_rep  = repmat(Phi, nobs, 1);
   int dc = Phi.n_cols;
+  
+  
   // Initialise parameters
+  
   std::cout << "init Rmat ... " << std::endl;
+  // Construct the R matrix from initials
   arma::mat Rmat = constructMatrix2(Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs); 
   int dr = Rmat.n_cols; 
   //std::cout << "Init alpha ... " << std::endl;
