@@ -7,5 +7,5 @@ Author: Yovna Junglee
 Maintainer: <yovna.junglee@uct.ac.za>
 Description: Bayesian implementation of the historical functional linear model with a lag parameter.
 License: What license is it under?
-Imports: Rcpp (>= 1.0.5)
-LinkingTo: Rcpp, RcppArmadillo
+Imports: Rcpp (>= 1.0.5), RcppNumerical, roptim
+LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppNumerical, roptim

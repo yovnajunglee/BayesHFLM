@@ -1,3 +1,4 @@
 useDynLib(BayesHFLM, .registration=TRUE)
+import(RcppNumerical)
 importFrom(Rcpp, evalCpp)
 exportPattern("^[[:alpha:]]+")

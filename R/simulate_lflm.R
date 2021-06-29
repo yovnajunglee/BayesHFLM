@@ -69,20 +69,25 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25, delta = 0.5,
   theta.s.tau <- create.regression.surface(taus, Ss, n.tau, delta=0.5)
   
   # Generate predictors
-  tau.mat <- matrix(rep(taus,each=nobs), ncol=nobs, byrow=TRUE)
+  tau.mat <- t(matrix(rep(taus,each=nobs), ncol=nobs, byrow=TRUE))
 
   # Within-curve errors
-  u <-  matrix(rep(rnorm(nobs, 10,4),each=n.tau),nrow=n.tau)
-  v <-  matrix(rep(rnorm(nobs, 10,4),each=n.tau),nrow=n.tau)
-
-  X.tau <- u*sin(2*pi*tau.mat)+v*cos(2*pi*tau.mat) 
   
-  # Add measurement error to predictors
-  X.tau <-t((X.tau) + matrix(rnorm(n = nobs*n.tau, 
-                                mean = 0 , sd = sqrt(varx)),
-                          ncol = nobs, nrow = n.tau))
+  # For X1
+  u11 <- exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(1^2)),n.tau), ncol = n.tau))
+  u12 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(2^2)),n.tau), ncol = n.tau))
+  u21 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(1^2)),n.tau), ncol = n.tau))
+  u22 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(2^2)),n.tau), ncol = n.tau))
+  U = matrix(rep(rnorm(nobs, 10,4), n.tau), ncol = n.tau)
+  V = matrix(rep(rnorm(nobs, 10,4), n.tau), ncol = n.tau)
+ 
+  X.tau <- U*sin(2*pi*tau.mat)+V*cos(2*pi*tau.mat) 
+
+    #u11*sin(1*pi*tau.mat) + u12*sin(2*pi*tau.mat) +
+    #u21*cos(1*pi*tau.mat) + u22*cos(2*pi*tau.mat)
+  
   # Intercept term
-  mutau <- 10*exp(-(2*(t(tau.mat)-0.5))^2)
+  mutau <- 10*exp(-(2*((tau.mat)-0.5))^2)
   #-2*sin(4*pi*t(tau.mat))
   
   Y.tau <- mutau + X.tau%*%theta.s.tau/n.tau
@@ -93,13 +98,18 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25, delta = 0.5,
                  ncol = n.tau, nrow = nobs)
   Y.tau <- Y.tau + etau
   
+  print(calculate.error(eSNR, Y.tau, nobs, n.tau))
+  # Add measurement error to predictors
+  X.tau <-(X.tau) + matrix(rnorm(n = nobs*n.tau, 
+                                 mean = 0 , sd = sqrt(varx)),
+                           nrow = nobs, ncol = n.tau)
   if(plot){
     par(mfrow=c(1,3))
     plot(Y.tau[1,], type = 'l')
     for(i in 2:nobs){
       lines(Y.tau[i,], type = 'l')
     }
-    plot(X.tau[1,], type = 'l', ylim = c(-20,20))
+    plot(X.tau[1,], type = 'l', ylim = c(min(X.tau), max(X.tau)))
     for(i in 1:nobs){
       lines(X.tau[i,], type = 'l')
     }
@@ -147,8 +157,14 @@ test <- function(mu = c(1,2) , Sigma= matrix(c(3,2,2,4),ncol=2)){
 # colnames(theta)<-c("x","y","z")
 # theta[which(theta$z==0,arr.ind = TRUE),3] <- NA
 # coul <-viridis(10000)
-# levelplot(z~x*y, theta, col.regions = coul, xlab = "s", ylab = bquote(tau), at=seq(-1.85,1.2, length.out=150))
-# abline(h = 12.5)
+# levelplot(lag.theta, col.regions = coul, xlab = "s", ylab = bquote(tau))
+# # abline(h = 12.5)
+# # 
 # 
-
-
+# Res <- Yfit-Ymat
+# plot(Res[,1], col = 1)
+# for(i in 1:nobs){
+#   points(Res[,i], col =i)
+# }
+# contour(cor((Res)))
+#diag(cor(Res))
