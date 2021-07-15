@@ -74,20 +74,20 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25, delta = 0.5,
   # Within-curve errors
   
   # For X1
-  u11 <- exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(1^2)),n.tau), ncol = n.tau))
-  u12 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(2^2)),n.tau), ncol = n.tau))
-  u21 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(1^2)),n.tau), ncol = n.tau))
-  u22 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(2^2)),n.tau), ncol = n.tau))
+  #u11 <- exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(1^2)),n.tau), ncol = n.tau))
+  #u12 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(2^2)),n.tau), ncol = n.tau))
+  #u21 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(1^2)),n.tau), ncol = n.tau))
+  #u22 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(2^2)),n.tau), ncol = n.tau))
   U = matrix(rep(rnorm(nobs, 10,4), n.tau), ncol = n.tau)
   V = matrix(rep(rnorm(nobs, 10,4), n.tau), ncol = n.tau)
  
   X.tau <- U*sin(2*pi*tau.mat)+V*cos(2*pi*tau.mat) 
-
+  X.tau <- (X.tau-mean(X.tau))/sd(X.tau)
     #u11*sin(1*pi*tau.mat) + u12*sin(2*pi*tau.mat) +
     #u21*cos(1*pi*tau.mat) + u22*cos(2*pi*tau.mat)
   
   # Intercept term
-  mutau <- 10*exp(-(2*((tau.mat)-0.5))^2)
+  mutau <- 0  #10*exp(-(2*((tau.mat)-0.5))^2)
   #-2*sin(4*pi*t(tau.mat))
   
   Y.tau <- mutau + X.tau%*%theta.s.tau/n.tau

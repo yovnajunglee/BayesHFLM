@@ -274,7 +274,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
     std::cout << "Qc ... " << std::endl;
     //this takes long
     // Posterior covariance for [c|. ]
-    Qc = Dc*(1/as_scalar(sigma_c.col(iter - 1))) + (1/as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Phi+ 0.0000001*arma::eye(dc,dc);;
+    Qc = Dc*(1/as_scalar(sigma_c.col(iter - 1))) + (1/as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Phi ;  //+ 0.0000001*arma::eye(dc,dc);;
     //  std::cout << "ell... " << std::endl;
     ell = 1/(as_scalar(sigma_v.col(iter - 1)))*Phi.t()*Xvec;
     // std::cout << "Sample mvn ... " << std::endl;
@@ -304,7 +304,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
     Omegaf = repmat(sigs,1, Dalpha.n_cols)%Dalpha; // Copy the vector Dalpha.n_cols = K1 + UK times 
     // Posterior covariance of [alpha|.  ]
     std::cout << " sigmaalphas ... " << std::endl;
-    SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat) + 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
+    SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat); //+ 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
     // Check if symmetric
     //std::cout << Omegaf.is_symmetric() << std::endl;
     //std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
