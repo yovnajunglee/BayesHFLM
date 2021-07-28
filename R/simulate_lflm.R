@@ -15,14 +15,14 @@ library(viridisLite)
 
 
 # Construct the regression surface
-create.regression.surface <- function(taus, s, n.tau, delta){
+create.regression.surface <- function(taus, s, n.tau){
   # Generate regression surface
   theta.s.tau <- matrix(0, n.tau, n.tau)
   i <- 1
   sx = 0.3
   sz = 0.4
   for (tau in taus){
-   indx <- which(s > tau | s < max(tau - delta, 0))
+   indx <- which(s >= tau) #| s < max(tau - delta, 0))
    #From Wood paper on thin-plate regression splines
    a <- (0.75/(pi*sx*sz))*exp(-((tau-0.2)^2/sx^2)-((s-0.3)^2)/(sz^2))
    b <- (0.45/(pi*sx*sz))*exp(-((tau-0.7)^2/sx^2)-((s-0.8)^2)/(sz^2))
@@ -58,15 +58,15 @@ calculate.error <- function(eSNR = 5, yij, nobs, n.tau, ntest = 10){
   vary <- sum(aa)/(eSNR*(nobs-1)*n.tau)
 }
 
-simulate.hflm <- function(nobs = 100 , n.tau = 25, delta = 0.5,
+simulate.hflm <- function(nobs = 100 , n.tau = 25,
                           varx = 0.1, eSNR = 5, plot = TRUE){
  
   # Simulation setting by Meyer et al. (... )
   # Generate taus and S on the same regular interval in [0,1]
   taus <- Ss <- seq(0,1, length.out = n.tau)
- 
+  dv <- taus[2]
   # Evaluate regression surface
-  theta.s.tau <- create.regression.surface(taus, Ss, n.tau, delta=0.5)
+  theta.s.tau <- create.regression.surface(taus, Ss, n.tau)
   
   # Generate predictors
   tau.mat <- t(matrix(rep(taus,each=nobs), ncol=nobs, byrow=TRUE))
@@ -87,10 +87,11 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25, delta = 0.5,
     #u21*cos(1*pi*tau.mat) + u22*cos(2*pi*tau.mat)
   
   # Intercept term
-  mutau <- 0  #10*exp(-(2*((tau.mat)-0.5))^2)
+  mutau <- 0.5*exp(-(2*((tau.mat)-0.5))^2)
+  #plot(mutau[i,]~taus)
   #-2*sin(4*pi*t(tau.mat))
   
-  Y.tau <- mutau + X.tau%*%theta.s.tau/n.tau
+  Y.tau <- mutau + (X.tau%*%theta.s.tau*taus[2])
   # Generate IID error terms for Y_i(tau) (between curve errors)
   etau <- matrix(rnorm(n = nobs*n.tau, 
                        mean = 0 , 
@@ -100,20 +101,22 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25, delta = 0.5,
   
   print(calculate.error(eSNR, Y.tau, nobs, n.tau))
   # Add measurement error to predictors
-  X.tau <-(X.tau) + matrix(rnorm(n = nobs*n.tau, 
+  X.tau <-(X.tau) + matrix(rnorm(n = nobs*n.tau,
                                  mean = 0 , sd = sqrt(varx)),
                            nrow = nobs, ncol = n.tau)
   if(plot){
     par(mfrow=c(1,3))
-    plot(Y.tau[1,], type = 'l')
+    plot(Y.tau[1,], type = 'l', ylim = c(min(Y.tau), max(Y.tau)))
     for(i in 2:nobs){
       lines(Y.tau[i,], type = 'l')
     }
+    lines(mutau[1,], col = "red")
+    
     plot(X.tau[1,], type = 'l', ylim = c(min(X.tau), max(X.tau)))
     for(i in 1:nobs){
       lines(X.tau[i,], type = 'l')
     }
-    contour(theta.s.tau)
+    contour(theta.s.tau, levels = 10)
   }
   
   return(list(ytau = Y.tau, xtau = X.tau, theta.s.tau = theta.s.tau, vary = calculate.error(eSNR, Y.tau, nobs, n.tau)))

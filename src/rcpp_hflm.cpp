@@ -102,7 +102,7 @@ arma::mat data_matrix(arma::mat mymat, int nc, int nr){
 // [[Rcpp::export]]
 arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
                           arma::colvec Ss, arma::mat Fk, arma::mat Fk1, 
-                          arma::mat Psi, double delta, int nobs){
+                          arma::mat Psi, int nobs){
     // Evaluate no. of observations
     int ntau = taus.n_elem; //Xmat.n_cols;
     //int nobs = Xmat.n_rows;
@@ -124,18 +124,17 @@ arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
                 for (int s = 0; s < ntau; ++s){
                     double psival = Psi(s, u);
                     double sval = Ss(s);
-                        if (sval >= (tauval - delta) && sval <= (tauval)){
-                            intval = intval + Xmat(i,s)*psival;
+                        if (sval < (tauval)){
+                            intval = intval + Xmat(i,s)*psival*taus(1);
                         }else{
                             intval = intval + 0;
                         }
                 }
-                Xtil(temp,u) = intval/ntau;
+                Xtil(temp,u) = intval;
             }
            temp++;
         }
     }
-    
     arma::mat tau_mat = repmat(taus, nobs ,1);
     //std::cout << "in construct matrix ... " << std::endl;
     
@@ -186,7 +185,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
                         arma::colvec taus, arma::colvec Ss,
                         arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat Phi,
                         arma::mat Dmu, arma::mat Db, arma::mat Dalpha,
-                        arma::mat Dc, double delta,
+                        arma::mat Dc,
                         double i1, double i2, double a, double b, int niter){
   
   
@@ -210,7 +209,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
   // =======================================
 
   //std::cout << "initialise Rmat ... " << std::endl;
-  arma::mat Rmat = constructMatrix(Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs); 
+  arma::mat Rmat = constructMatrix(Xvec, taus, Ss, Fk, Fk1, Psi,  nobs); 
   int dr = Rmat.n_cols; 
   //std::cout << "Init alpha ... " << std::endl;
   arma::mat alpha(dr, niter) ; 
@@ -283,7 +282,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
     Xsample = Phi*c_sample;
     // Update R matrix using the new X(v) smooth samples
     std::cout << "Constructing new R ..." << std::endl;
-    Rmat  = constructMatrix(Xsample, taus, Ss, Fk, Fk1, Psi, delta, nobs);
+    Rmat  = constructMatrix(Xsample, taus, Ss, Fk, Fk1, Psi, nobs);
     
     
     
@@ -313,7 +312,7 @@ Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat,
     std::cout << "mu  alphas ... " << std::endl;
     muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
     alpha_sample = sampleMVN(muAlpha, SigmaAlph);
-    std::cout << alpha_sample << std::endl;
+    //std::cout << alpha_sample << std::endl;
     
     
     
@@ -423,7 +422,7 @@ Rcpp::List mcmc_sampler2(arma::colvec Yvec, arma::mat Ymat,
                          arma::colvec taus, arma::colvec Ss,
                          arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat Phi,
                          arma::mat Dmu, arma::mat Db, arma::mat Dalpha,
-                         arma::mat Dc, double delta,
+                         arma::mat Dc, 
                          double i1, double i2, double a, double b, int niter){
   
   // =======================================
@@ -440,7 +439,7 @@ Rcpp::List mcmc_sampler2(arma::colvec Yvec, arma::mat Ymat,
   // Initialise parameters
   
   //std::cout << "init Rmat ... " << std::endl;
-  arma::mat Rmat = constructMatrix(Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs); 
+  arma::mat Rmat = constructMatrix(Xvec, taus, Ss, Fk, Fk1, Psi,  nobs); 
   int dr = Rmat.n_cols; 
   //std::cout << "Init alpha ... " << std::endl;
   arma::mat alpha(dr, niter) ; 
@@ -507,7 +506,7 @@ Rcpp::List mcmc_sampler2(arma::colvec Yvec, arma::mat Ymat,
     c_sample = sampleMVN(ell, Qc);
     Xsample = Phi*c_sample;
     std::cout << "Constructing new R ..." << std::endl;
-    Rmat  = constructMatrix(Xsample, taus, Ss, Fk, Fk1, Psi, delta, nobs);
+    Rmat  = constructMatrix(Xsample, taus, Ss, Fk, Fk1, Psi,nobs);
     
     // Create vector sigmas
     sigs = join_vert(ones(K1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
@@ -588,7 +587,7 @@ Rcpp::List mcmc_sampler2(arma::colvec Yvec, arma::mat Ymat,
 //[[Rcpp::export]]
 arma::mat constructMatrix2(arma::mat Xvec, arma::colvec taus,
                           arma::colvec Ss, arma::mat Fk, arma::mat Fk1, 
-                          arma::mat Psi, double delta, int nobs){
+                          arma::mat Psi,  int nobs){
   // Evaluate no. of observations
   int ntau = taus.n_elem; //Xmat.n_cols;
   //int nobs = Xmat.n_rows;
@@ -615,7 +614,7 @@ arma::mat constructMatrix2(arma::mat Xvec, arma::colvec taus,
         for (int s = 0; s < ntau; ++s){
           //std::cout << "s "<< s << "v "<< v << std::endl;
           sval = Ss(s);
-          if (sval >= (tauval - delta) && sval <= (tauval)){
+          if ( sval <(tauval)){
             intval = intval + Xmat(i,s)*Psi(v,u); // X_i(s)*Psi_u(v=s-t)
             ++v ; 
           }else{
@@ -680,7 +679,7 @@ Rcpp::List mcmc_sampler3(arma::colvec Yvec, arma::mat Ymat,
                          arma::colvec taus, arma::colvec Ss,
                          arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat Phi,
                          arma::mat Dmu, arma::mat Db, arma::mat Dalpha,
-                         arma::mat Dc, double delta,
+                         arma::mat Dc, 
                          double i1, double i2, double a, double b, int niter){
   
   
@@ -699,7 +698,8 @@ Rcpp::List mcmc_sampler3(arma::colvec Yvec, arma::mat Ymat,
   
   std::cout << "init Rmat ... " << std::endl;
   // Construct the R matrix from initials
-  arma::mat Rmat = constructMatrix2(Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs); 
+  arma::mat Rmat = constructMatrix2(Xvec, taus, Ss, Fk, Fk1, Psi,
+                                    nobs); 
   int dr = Rmat.n_cols; 
   //std::cout << "Init alpha ... " << std::endl;
   arma::mat alpha(dr, niter) ; 
@@ -767,7 +767,7 @@ Rcpp::List mcmc_sampler3(arma::colvec Yvec, arma::mat Ymat,
     c_sample = sampleMVN(ell, Qc);
     Xsample = Phi*c_sample;
     std::cout << "Constructing new R ..." << std::endl;
-    Rmat  = constructMatrix2(Xsample, taus, Ss, Fk, Fk1, Psi, delta, nobs);
+    Rmat  = constructMatrix2(Xsample, taus, Ss, Fk, Fk1, Psi,nobs);
     
     // Create vector sigmas
     sigs = join_vert(ones(K1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
@@ -844,4 +844,211 @@ Rcpp::List mcmc_sampler3(arma::colvec Yvec, arma::mat Ymat,
                             Rcpp::Named("sigmav") = sigma_v);
 }
 
+
+// MCMC sampler 
+// fpca
+// for faster computation
+// [[Rcpp::export]]
+Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat,
+                         arma::colvec Xvec, arma::mat Xmat,  arma::mat Xmat_centered, 
+                         arma::colvec taus, arma::colvec Ss,
+                         arma::mat Fk, arma::mat Fk1, arma::mat Psi, 
+                         arma::mat fpcs, arma::mat mux, // chnage here
+                         arma::mat Dmu, arma::mat Db, arma::mat Dalpha,
+                         arma::mat Dc, 
+                         double i1, double i2, double a, double b, int niter){
+  
+  // =======================================
+  // Find dimensions
+  int nobs = Ymat.n_rows; // No. of curves
+  int ntaus = Ymat.n_cols; // Frequency of data
+  int K = Fk.n_cols; // Size of first basis function (wrt tau) [part of tensor product]
+  int K1 = Fk1.n_cols; // Size of basis function for intercept term
+  int U = Psi.n_cols; // Size of second basis function (wrt v) [part of tensor product]
+  //int Kphi  = Phi.n_cols; // Basis functions for X smoothin
+  int totals = nobs*ntaus; 
+  //int dc = Phi.n_cols;  // must remove
+  int npc = fpcs.n_cols;
+  // Initialise parameters
+  
+  //std::cout << "init Rmat ... " << std::endl;
+  arma::mat Rmat = constructMatrix(Xvec, taus, Ss, Fk, Fk1, Psi,  nobs); 
+  int dr = Rmat.n_cols; 
+  //std::cout << "Init alpha ... " << std::endl;
+  arma::mat alpha(dr, niter) ; 
+  alpha.col(0) = arma::randu(dr);
+  //std::cout << "Init c... " << std::endl;
+  arma::mat xisims(nobs*npc, niter) ; 
+  xisims.col(0) = arma::randu(nobs*npc);
+  
+  //std::cout << "Init sigma ... " << std::endl;
+  
+  arma::mat sigma_e(1, niter);
+  sigma_e.col(0) = 10 ; //arma::randu(1);
+  
+  arma::mat sigma_b(1, niter);
+  sigma_b.col(0) = 10 ; //arma::randu(1);
+  
+  arma::mat sigma_mu(1, niter);
+  sigma_mu.col(0) = 10; // arma::randu(1);
+  
+  arma::mat lambda(npc, niter);
+  lambda.col(0) = arma::randu(npc);
+  
+  arma::mat sigma_v(1, niter);
+  sigma_v.col(0) = 10; // arma::randu(1);
+  
+  // Define matrices used below
+  //arma::mat Qc(Kphi, Kphi);
+  arma::mat post_c_mean(npc*nobs, 1);
+  int post_c_var;
+  //arma::vec ell(Kphi); 
+  arma::mat xi_sample(npc*nobs, 1);
+  arma::mat xi_sample_sq(nobs, npc);
+    
+  arma::mat Xsample(totals, 1);
+  arma::mat sigs(dr, dr);
+  arma::mat Omegaf(dr, dr);
+  arma::mat SigmaAlph(dr, dr);
+  arma::mat muAlpha(dr, 1);
+  arma::mat alpha_sample(dr, 1);
+  double shape_e;
+  double rate_e;
+  double sigma_e_sample;
+  double shape_mu;
+  double rate_mu;
+  double sigma_mu_sample;
+  double shape_b;
+  double rate_b;
+  double sigma_b_sample;
+  double shape_lam;
+  double rate_lam;
+  double shape_v;
+  double rate_v;
+  double sigma_v_sample;
+  
+  arma::mat lambda_sample(npc, 1);
+  arma::mat  post_xi_var(npc, 1);
+  arma::mat  post_xi_mean(npc, 1);
+  
+  arma::mat Fmat  = kron(arma::eye(nobs,nobs), fpcs);
+  
+  for (int iter = 1; iter < niter; ++iter){
+    std::cout << "Iteration "<< iter << std::endl;
+    // Sample c for smooth X
+    std::cout << "Sampling c ... " << std::endl;
+    
+    // ====== Using fpca
+    int temp = 0;
+    int temp1 = 0;
+    
+    std::cout << "post c varr ... " << std::endl;
+    
+    post_xi_var = (lambda.col(iter-1)*as_scalar(sigma_v(iter - 1)))/(lambda.col(iter-1)+as_scalar(sigma_v(iter - 1)));
+    //std::cout << post_xi_var << std::endl;
+    
+    for(int x = 0; x < nobs; ++x){
+     // std::cout << "post c mean ... " << std::endl;
+      post_xi_mean  = post_xi_var%(fpcs.t()*Xmat_centered.row(x).t()*(1/as_scalar(sigma_v.col(iter - 1))));
+     // std::cout << "sample ci " << std::endl;
+     //std::cout << post_xi_mean << std::endl;
+       for(int k = 0 ; k < npc; ++k){
+         xi_sample.row(temp) = rnorm(1, post_xi_mean.row(k) , sqrt(post_xi_var.row(k)));
+         xi_sample_sq.col(k).row(x)= pow(xi_sample.row(temp), 2);
+         temp = temp + 1;
+       }
+     
+    }
+    
+    Xsample <- Fmat*xi_sample;
+      
+  
+    // std::cout << c_sample << std::endl;
+    
+    // ========
+    
+    std::cout << "Constructing new R ..." << std::endl;
+    Rmat  = constructMatrix(Xsample, taus, Ss, Fk, Fk1, Psi,nobs);
+    //std::cout << Rmat << std::endl;
+    // Create vector sigmas
+    sigs = join_vert(ones(K1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
+                     ones(U*K, 1)*(1/as_scalar(sigma_b.col(iter -1))));
+    std::cout << "Sampling alphas ... " << std::endl;
+    std::cout << "omegaf ... " << std::endl;
+
+    Omegaf = repmat(sigs,1, Dalpha.n_cols)%Dalpha;
+    std::cout << " sigmaalphas ... " << std::endl;
+
+    SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat) + 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
+    std::cout << "mu  alphas ... " << std::endl;
+    std::cout << Omegaf.is_symmetric() << std::endl;
+    std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
+
+    muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
+    alpha_sample = sampleMVN(muAlpha, SigmaAlph);
+    //std::cout << alpha_sample << std::endl;
+    // Generate the sigmas
+    //std::cout << "Sampling sigma  ... " << std::endl;
+    //std::cout << "shape e ... " << std::endl;
+    shape_e = ntaus*nobs/2 + i1;
+
+    //std::cout << "rate e ... " << std::endl;
+    rate_e = i2 + 0.5*as_scalar((Yvec - (Rmat*alpha_sample)).t()*(Yvec - (Rmat*alpha_sample)));
+    sigma_e_sample = 1/arma::randg<double>( distr_param(shape_e,1/rate_e));
+    //(Rcpp::rgamma(1, shape_e, 1/rate_e));
+    //std::cout << "shape mu ... " << std::endl;
+    shape_mu = K/2 + a;
+
+    //std::cout << "rate mu ... " << std::endl;
+    rate_mu = b + 0.5*as_scalar((alpha_sample.rows(0, K1-1).t()*Dmu*alpha_sample.rows(0, K1-1)));
+    sigma_mu_sample =  1/arma::randg<double>(distr_param(shape_mu,1/rate_mu));
+
+    std::cout << "shape b ... " << std::endl;
+    shape_b = U*K/2 + a;
+    std::cout << "rate b ... " << std::endl;
+
+    rate_b = b + 0.5*as_scalar((alpha_sample.rows(K1, U*K + K1 - 1).t()*Db*alpha_sample.rows(K1, U*K + K1 - 1)));
+    sigma_b_sample =  1/arma::randg<double>( distr_param(shape_b,1/rate_b));
+    std::cout << "shape v ... " << std::endl;
+
+    shape_v =  ntaus*nobs/2 + i1;
+    std::cout << "rate v ... " << std::endl;
+
+    rate_v = i2 + 0.5*as_scalar(((Xvec - Xsample).t()*(Xvec - Xsample)));
+    sigma_v_sample = 1/arma::randg<double>( distr_param(shape_v,1/rate_v));
+    std::cout << "shape c ... " << std::endl;
+
+    
+    shape_lam = nobs/2 + a;
+    for(int k = 0 ; k < npc ; ++k){
+      rate_lam = b + 0.5*sum(xi_sample_sq.col(k));
+      lambda_sample.row(k) = 1/arma::randg<double>( distr_param(shape_lam,1/rate_lam));
+    }
+    // shape_c = (npc*nobs)/2 + a;
+    // std::cout << "rate c ... " << std::endl;
+    // 
+    // rate_c = b + 0.5*as_scalar((c_sample.t()*c_sample));
+    // sigma_c_sample = 1/arma::randg<double>( distr_param(shape_c,1/rate_c));
+    // 
+    // Store values
+    alpha.col(iter) = alpha_sample;
+    xisims.col(iter) = xi_sample;
+
+    sigma_e.col(iter) = sigma_e_sample;
+    sigma_mu.col(iter) = sigma_mu_sample;
+    sigma_b.col(iter) = sigma_b_sample;
+    sigma_v.col(iter) = sigma_v_sample;
+    lambda.col(iter) = lambda_sample;
+
+  }
+  
+  return Rcpp::List::create(Rcpp::Named("alphas")=alpha,
+                            Rcpp::Named("xi_k")=xisims,
+                            Rcpp::Named("Xv")=Xsample,
+                            Rcpp::Named("sigmae") = sigma_e,
+                            Rcpp::Named("sigmamu") = sigma_mu,
+                            Rcpp::Named("sigmab") = sigma_b,
+                            Rcpp::Named("lambda") = lambda,
+                            Rcpp::Named("sigmav") = sigma_v);
+}
 

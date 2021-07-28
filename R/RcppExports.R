@@ -25,23 +25,27 @@ data_matrix <- function(mymat, nc, nr) {
     .Call(`_BayesHFLM_data_matrix`, mymat, nc, nr)
 }
 
-constructMatrix <- function(Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs) {
-    .Call(`_BayesHFLM_constructMatrix`, Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs)
+constructMatrix <- function(Xvec, taus, Ss, Fk, Fk1, Psi, nobs) {
+    .Call(`_BayesHFLM_constructMatrix`, Xvec, taus, Ss, Fk, Fk1, Psi, nobs)
 }
 
-mcmc_sampler <- function(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, a, b, niter) {
-    .Call(`_BayesHFLM_mcmc_sampler`, Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, a, b, niter)
+mcmc_sampler <- function(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter) {
+    .Call(`_BayesHFLM_mcmc_sampler`, Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter)
 }
 
-mcmc_sampler2 <- function(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, a, b, niter) {
-    .Call(`_BayesHFLM_mcmc_sampler2`, Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, a, b, niter)
+mcmc_sampler2 <- function(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter) {
+    .Call(`_BayesHFLM_mcmc_sampler2`, Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter)
 }
 
-constructMatrix2 <- function(Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs) {
-    .Call(`_BayesHFLM_constructMatrix2`, Xvec, taus, Ss, Fk, Fk1, Psi, delta, nobs)
+constructMatrix2 <- function(Xvec, taus, Ss, Fk, Fk1, Psi, nobs) {
+    .Call(`_BayesHFLM_constructMatrix2`, Xvec, taus, Ss, Fk, Fk1, Psi, nobs)
 }
 
-mcmc_sampler3 <- function(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, a, b, niter) {
-    .Call(`_BayesHFLM_mcmc_sampler3`, Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, delta, i1, i2, a, b, niter)
+mcmc_sampler3 <- function(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter) {
+    .Call(`_BayesHFLM_mcmc_sampler3`, Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter)
+}
+
+mcmc_sampler4 <- function(Yvec, Ymat, Xvec, Xmat, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter) {
+    .Call(`_BayesHFLM_mcmc_sampler4`, Yvec, Ymat, Xvec, Xmat, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter)
 }
 
