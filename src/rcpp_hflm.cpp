@@ -110,7 +110,9 @@ arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
     int U = Psi.n_cols;
     int K = Fk.n_cols;
     // Initialise matrix
-    arma::mat Xmat = data_matrix(Xvec, ntau, nobs);
+    std::cout << "reshape" << std::endl;
+    arma::mat Xmat =  reshape(Xvec, ntau, nobs).t();
+    //data_matrix(Xvec, ntau, nobs);
     arma::mat Xtil(totals, U);
     
     int temp = 0;
@@ -595,7 +597,8 @@ arma::mat constructMatrix2(arma::mat Xvec, arma::colvec taus,
   int U = Psi.n_cols;
   int K = Fk.n_cols;
   // Initialise matrix
-  arma::mat Xmat = data_matrix(Xvec, ntau, nobs);
+  arma::mat Xmat =  reshape(Xvec, nobs, ntau).t();
+    //data_matrix(Xvec, ntau, nobs);
   arma::mat Xtil(totals, U);
   
   int temp = 0;
@@ -1042,3 +1045,17 @@ Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat,
                             Rcpp::Named("sigmav") = sigma_v);
 }
 
+
+// vectorise test
+// [[Rcpp::export]]
+arma::mat vector_test(arma::mat A){
+  arma::mat B = vectorise(A.t());
+  return B;
+}
+
+// make mat
+// [[Rcpp::export]]
+arma::mat make_mat(arma::mat A, int nrow, int ncol){
+  arma::mat B = reshape(A, nrow, ncol).t(); // fills by column
+  return B;
+}

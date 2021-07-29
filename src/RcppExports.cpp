@@ -229,6 +229,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// vector_test
+arma::mat vector_test(arma::mat A);
+RcppExport SEXP _BayesHFLM_vector_test(SEXP ASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
+    rcpp_result_gen = Rcpp::wrap(vector_test(A));
+    return rcpp_result_gen;
+END_RCPP
+}
+// make_mat
+arma::mat make_mat(arma::mat A, int nrow, int ncol);
+RcppExport SEXP _BayesHFLM_make_mat(SEXP ASEXP, SEXP nrowSEXP, SEXP ncolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
+    Rcpp::traits::input_parameter< int >::type nrow(nrowSEXP);
+    Rcpp::traits::input_parameter< int >::type ncol(ncolSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_mat(A, nrow, ncol));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_rcpparma_outerproduct", (DL_FUNC) &_BayesHFLM_rcpparma_outerproduct, 1},
@@ -243,6 +267,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_constructMatrix2", (DL_FUNC) &_BayesHFLM_constructMatrix2, 7},
     {"_BayesHFLM_mcmc_sampler3", (DL_FUNC) &_BayesHFLM_mcmc_sampler3, 19},
     {"_BayesHFLM_mcmc_sampler4", (DL_FUNC) &_BayesHFLM_mcmc_sampler4, 23},
+    {"_BayesHFLM_vector_test", (DL_FUNC) &_BayesHFLM_vector_test, 1},
+    {"_BayesHFLM_make_mat", (DL_FUNC) &_BayesHFLM_make_mat, 3},
     {NULL, NULL, 0}
 };
 
