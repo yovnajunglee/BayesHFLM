@@ -10,7 +10,7 @@
 #include <RcppNumerical.h>
 #include "RcppEigen.h"
 #include <roptim.h>
-#include <cmath> 
+#include <cmath>
 #include <iostream>
 using namespace arma;
 using namespace Numer;
@@ -853,7 +853,7 @@ Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat,
                          arma::colvec Xvec, arma::mat Xmat,  arma::mat Xmat_centered, 
                          arma::colvec taus, arma::colvec Ss,
                          arma::mat Fk, arma::mat Fk1, arma::mat Psi, 
-                         arma::mat fpcs, arma::mat mux, // chnage here
+                         arma::mat fpcs, arma::mat mux, arma::mat eigs, arma::mat lambda_start, // chnage here
                          arma::mat Dmu, arma::mat Db, arma::mat Dalpha,
                          arma::mat Dc, 
                          double i1, double i2, double a, double b, int niter){
@@ -865,10 +865,9 @@ Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat,
   int K = Fk.n_cols; // Size of first basis function (wrt tau) [part of tensor product]
   int K1 = Fk1.n_cols; // Size of basis function for intercept term
   int U = Psi.n_cols; // Size of second basis function (wrt v) [part of tensor product]
-  //int Kphi  = Phi.n_cols; // Basis functions for X smoothin
   int totals = nobs*ntaus; 
-  //int dc = Phi.n_cols;  // must remove
   int npc = fpcs.n_cols;
+  
   // Initialise parameters
   
   //std::cout << "init Rmat ... " << std::endl;
@@ -893,15 +892,12 @@ Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat,
   sigma_mu.col(0) = 10; // arma::randu(1);
   
   arma::mat lambda(npc, niter);
-  lambda.col(0) = arma::randu(npc);
+  lambda.col(0) = lambda_start;
   
   arma::mat sigma_v(1, niter);
-  sigma_v.col(0) = 10; // arma::randu(1);
+  sigma_v.col(0) = arma::randu(1);
   
   // Define matrices used below
-  //arma::mat Qc(Kphi, Kphi);
-  arma::mat post_c_mean(npc*nobs, 1);
-  int post_c_var;
   //arma::vec ell(Kphi); 
   arma::mat xi_sample(npc*nobs, 1);
   arma::mat xi_sample_sq(nobs, npc);
@@ -940,11 +936,10 @@ Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat,
     
     // ====== Using fpca
     int temp = 0;
-    int temp1 = 0;
     
     std::cout << "post c varr ... " << std::endl;
     
-    post_xi_var = (lambda.col(iter-1)*as_scalar(sigma_v(iter - 1)))/(lambda.col(iter-1)+as_scalar(sigma_v(iter - 1)));
+    post_xi_var = (lambda.col(iter-1)*as_scalar(sigma_v.col(iter - 1)))/(lambda.col(iter-1)+as_scalar(sigma_v.col(iter - 1)));
     //std::cout << post_xi_var << std::endl;
     
     for(int x = 0; x < nobs; ++x){
@@ -953,36 +948,36 @@ Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat,
      // std::cout << "sample ci " << std::endl;
      //std::cout << post_xi_mean << std::endl;
        for(int k = 0 ; k < npc; ++k){
-         xi_sample.row(temp) = rnorm(1, post_xi_mean.row(k) , sqrt(post_xi_var.row(k)));
+         xi_sample.row(temp) = post_xi_mean.row(k) + sqrt(post_xi_var.row(k))*arma::randn<double>();
          xi_sample_sq.col(k).row(x)= pow(xi_sample.row(temp), 2);
          temp = temp + 1;
        }
      
     }
     
-    Xsample <- Fmat*xi_sample;
+    Xsample = mux +  Fmat*xi_sample;
       
   
     // std::cout << c_sample << std::endl;
     
     // ========
     
-    std::cout << "Constructing new R ..." << std::endl;
+   // std::cout << "Constructing new R ..." << std::endl;
     Rmat  = constructMatrix(Xsample, taus, Ss, Fk, Fk1, Psi,nobs);
     //std::cout << Rmat << std::endl;
     // Create vector sigmas
     sigs = join_vert(ones(K1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
                      ones(U*K, 1)*(1/as_scalar(sigma_b.col(iter -1))));
-    std::cout << "Sampling alphas ... " << std::endl;
-    std::cout << "omegaf ... " << std::endl;
+    //std::cout << "Sampling alphas ... " << std::endl;
+    //std::cout << "omegaf ... " << std::endl;
 
     Omegaf = repmat(sigs,1, Dalpha.n_cols)%Dalpha;
-    std::cout << " sigmaalphas ... " << std::endl;
+    //std::cout << " sigmaalphas ... " << std::endl;
 
     SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat) + 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
-    std::cout << "mu  alphas ... " << std::endl;
-    std::cout << Omegaf.is_symmetric() << std::endl;
-    std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
+    //std::cout << "mu  alphas ... " << std::endl;
+    //std::cout << Omegaf.is_symmetric() << std::endl;
+    //std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
 
     muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
     alpha_sample = sampleMVN(muAlpha, SigmaAlph);
@@ -997,7 +992,7 @@ Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat,
     sigma_e_sample = 1/arma::randg<double>( distr_param(shape_e,1/rate_e));
     //(Rcpp::rgamma(1, shape_e, 1/rate_e));
     //std::cout << "shape mu ... " << std::endl;
-    shape_mu = K/2 + a;
+    shape_mu = K1/2 + a;
 
     //std::cout << "rate mu ... " << std::endl;
     rate_mu = b + 0.5*as_scalar((alpha_sample.rows(0, K1-1).t()*Dmu*alpha_sample.rows(0, K1-1)));
@@ -1024,12 +1019,7 @@ Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat,
       rate_lam = b + 0.5*sum(xi_sample_sq.col(k));
       lambda_sample.row(k) = 1/arma::randg<double>( distr_param(shape_lam,1/rate_lam));
     }
-    // shape_c = (npc*nobs)/2 + a;
-    // std::cout << "rate c ... " << std::endl;
-    // 
-    // rate_c = b + 0.5*as_scalar((c_sample.t()*c_sample));
-    // sigma_c_sample = 1/arma::randg<double>( distr_param(shape_c,1/rate_c));
-    // 
+
     // Store values
     alpha.col(iter) = alpha_sample;
     xisims.col(iter) = xi_sample;
