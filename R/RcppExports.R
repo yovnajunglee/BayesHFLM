@@ -49,11 +49,19 @@ mcmc_sampler4 <- function(Yvec, Ymat, Xvec, Xmat, Xmat_centered, taus, Ss, Fk, F
     .Call(`_BayesHFLM_mcmc_sampler4`, Yvec, Ymat, Xvec, Xmat, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter)
 }
 
+mcmc_sampler5 <- function(Yvec, Ymat, Xvec, Xmat, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter) {
+    .Call(`_BayesHFLM_mcmc_sampler5`, Yvec, Ymat, Xvec, Xmat, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter)
+}
+
 vector_test <- function(A) {
     .Call(`_BayesHFLM_vector_test`, A)
 }
 
 make_mat <- function(A, nrow, ncol) {
     .Call(`_BayesHFLM_make_mat`, A, nrow, ncol)
+}
+
+sum_mat <- function(A, B) {
+    .Call(`_BayesHFLM_sum_mat`, A, B)
 }
 

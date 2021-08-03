@@ -229,6 +229,39 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// mcmc_sampler5
+Rcpp::List mcmc_sampler5(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::mat Xmat_centered, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat fpcs, arma::mat mux, arma::mat eigs, arma::mat lambda_start, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, double i1, double i2, double a, double b, int niter);
+RcppExport SEXP _BayesHFLM_mcmc_sampler5(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP Xmat_centeredSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP fpcsSEXP, SEXP muxSEXP, SEXP eigsSEXP, SEXP lambda_startSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP niterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::colvec >::type Yvec(YvecSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Ymat(YmatSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type Xvec(XvecSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Xmat(XmatSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Xmat_centered(Xmat_centeredSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type taus(tausSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type Ss(SsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Fk(FkSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Fk1(Fk1SEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Psi(PsiSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type fpcs(fpcsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type mux(muxSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type eigs(eigsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type lambda_start(lambda_startSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dmu(DmuSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Db(DbSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dalpha(DalphaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dc(DcSEXP);
+    Rcpp::traits::input_parameter< double >::type i1(i1SEXP);
+    Rcpp::traits::input_parameter< double >::type i2(i2SEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
+    rcpp_result_gen = Rcpp::wrap(mcmc_sampler5(Yvec, Ymat, Xvec, Xmat, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter));
+    return rcpp_result_gen;
+END_RCPP
+}
 // vector_test
 arma::mat vector_test(arma::mat A);
 RcppExport SEXP _BayesHFLM_vector_test(SEXP ASEXP) {
@@ -253,6 +286,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sum_mat
+double sum_mat(arma::mat A, arma::mat B);
+RcppExport SEXP _BayesHFLM_sum_mat(SEXP ASEXP, SEXP BSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type B(BSEXP);
+    rcpp_result_gen = Rcpp::wrap(sum_mat(A, B));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_rcpparma_outerproduct", (DL_FUNC) &_BayesHFLM_rcpparma_outerproduct, 1},
@@ -267,8 +312,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_constructMatrix2", (DL_FUNC) &_BayesHFLM_constructMatrix2, 7},
     {"_BayesHFLM_mcmc_sampler3", (DL_FUNC) &_BayesHFLM_mcmc_sampler3, 19},
     {"_BayesHFLM_mcmc_sampler4", (DL_FUNC) &_BayesHFLM_mcmc_sampler4, 23},
+    {"_BayesHFLM_mcmc_sampler5", (DL_FUNC) &_BayesHFLM_mcmc_sampler5, 23},
     {"_BayesHFLM_vector_test", (DL_FUNC) &_BayesHFLM_vector_test, 1},
     {"_BayesHFLM_make_mat", (DL_FUNC) &_BayesHFLM_make_mat, 3},
+    {"_BayesHFLM_sum_mat", (DL_FUNC) &_BayesHFLM_sum_mat, 2},
     {NULL, NULL, 0}
 };
 
