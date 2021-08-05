@@ -24,8 +24,13 @@ create.regression.surface <- function(taus, s, n.tau){
   for (tau in taus){
    indx <- which(s >= tau) #| s < max(tau - delta, 0))
    #From Wood paper on thin-plate regression splines
+   
    a <- (0.75/(pi*sx*sz))*exp(-((tau-0.2)^2/sx^2)-((s-0.3)^2)/(sz^2))
    b <- (0.45/(pi*sx*sz))*exp(-((tau-0.7)^2/sx^2)-((s-0.8)^2)/(sz^2))
+   
+   #=== Just trying other surfaces
+   #a <- (0.1/(sqrt(2*pi)*sx*sz))*exp(-((s-0.2)^2/sz^2)-((tau-0.7)^2)/(sx^2))
+  # b <- (0.75/(pi*sx*sz))*exp(-((s-0.7)^2/sz^2)-((tau-0.8)^2)/(sx^2))
    theta.s.tau[, i]  <- a +b
    theta.s.tau[indx, i] <- 0
   i <- i + 1

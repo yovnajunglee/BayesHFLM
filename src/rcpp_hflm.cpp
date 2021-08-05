@@ -172,8 +172,9 @@ arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
    //arma::mat tau2 = tau_mat%tau_mat;
    //arma::mat tau3 = tau2%tau_mat;
    
-   arma::mat Rmat  =  arma::join_horiz(FF1, XX);
-    //arma::join_horiz(arma::ones(totals,1), FF1, XX);
+   arma::mat Rmat  = arma::join_horiz(FF1, XX); // arma::join_horiz(arma::ones(totals,1), FF1, XX); 
+   //arma::join_horiz(FF1, XX);
+    //
    //Rmat = arma::join_horiz(Rmat,FF1, XX);
   return Rmat;
 }
@@ -979,8 +980,8 @@ Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat,
 
     SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat) ;//+ 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
     ////std::cout << "mu  alphas ... " << std::endl;
-    ////std::cout << Omegaf.is_symmetric() << std::endl;
-    ////std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
+    //std::cout << Omegaf.is_symmetric() << std::endl;
+    //std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
 
     muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
     alpha_sample = sampleMVN(muAlpha, SigmaAlph);
