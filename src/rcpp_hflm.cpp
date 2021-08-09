@@ -1058,7 +1058,7 @@ Rcpp::List mcmc_sampler5(arma::colvec Yvec, arma::mat Ymat,
                          arma::mat fpcs, arma::mat mux, arma::mat eigs, arma::mat lambda_start, // chnage here
                          arma::mat Dmu, arma::mat Db, arma::mat Dalpha,
                          arma::mat Dc, 
-                         double i1, double i2, double a, double b, int niter){
+                         double i1, double i2, double a, double b, double A, int niter){
   
   // =======================================
   // Find dimensions
@@ -1240,7 +1240,7 @@ Rcpp::List mcmc_sampler5(arma::colvec Yvec, arma::mat Ymat,
       //std::cout << rate_lam << std::endl;
       
       lambda_sample.row(k) = 1/arma::randg<double>( distr_param(shape_lam,1/rate_lam));
-      vk_sample.row(k)= 1/arma::randg<double>( distr_param(0.5,1/((1/as_scalar(lambda.col(iter-1).row(k))) + 1)));
+      vk_sample.row(k)= 1/arma::randg<double>( distr_param(0.5,1/((1/as_scalar(lambda.col(iter-1).row(k))) + pow(A, 2))));
     }
     
     //std::cout << "Sampling kappa2" << std::endl;
@@ -1248,7 +1248,7 @@ Rcpp::List mcmc_sampler5(arma::colvec Yvec, arma::mat Ymat,
     rate_kappa2 = 0.5*sum((1/lambda_sample.t())%(sum(xi_sample_sq, 0))) + as_scalar(asims.col(iter-1)) ;
     kappa2_sample = 1/arma::randg<double>( distr_param(nobs*npc/2 + 0.5, 1/rate_kappa2));
       
-    a_sample = 1/arma::randg<double>( distr_param(0.5, 1/((1/kappa2_sample)+1)));
+    a_sample = 1/arma::randg<double>( distr_param(0.5, 1/((1/kappa2_sample)+ + pow(A, 2) )));
       
     // Store values
     alpha.col(iter) = alpha_sample;

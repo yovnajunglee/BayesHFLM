@@ -87,7 +87,7 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25,
   V = matrix(rep(rnorm(nobs, 10,4), n.tau), ncol = n.tau)
  
   X.tau <- U*sin(2*pi*tau.mat)+V*cos(2*pi*tau.mat) 
-  X.tau <- (X.tau-mean(X.tau))/sd(X.tau)
+  #X.tau <- (X.tau-mean(X.tau))/sd(X.tau)
     #u11*sin(1*pi*tau.mat) + u12*sin(2*pi*tau.mat) +
     #u21*cos(1*pi*tau.mat) + u22*cos(2*pi*tau.mat)
   
