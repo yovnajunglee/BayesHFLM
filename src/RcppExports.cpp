@@ -75,9 +75,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// is_null
+double is_null(Rcpp::Nullable<Rcpp::NumericVector> r);
+RcppExport SEXP _BayesHFLM_is_null(SEXP rSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type r(rSEXP);
+    rcpp_result_gen = Rcpp::wrap(is_null(r));
+    return rcpp_result_gen;
+END_RCPP
+}
+// isLag
+double isLag(Rcpp::Nullable<Rcpp::NumericVector> x_);
+RcppExport SEXP _BayesHFLM_isLag(SEXP x_SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type x_(x_SEXP);
+    rcpp_result_gen = Rcpp::wrap(isLag(x_));
+    return rcpp_result_gen;
+END_RCPP
+}
 // constructMatrix
-arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, int nobs);
-RcppExport SEXP _BayesHFLM_constructMatrix(SEXP XvecSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP nobsSEXP) {
+arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, int nobs, double lower_bound, arma::mat Zmat);
+RcppExport SEXP _BayesHFLM_constructMatrix(SEXP XvecSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP nobsSEXP, SEXP lower_boundSEXP, SEXP ZmatSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -88,13 +110,45 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type Fk1(Fk1SEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Psi(PsiSEXP);
     Rcpp::traits::input_parameter< int >::type nobs(nobsSEXP);
-    rcpp_result_gen = Rcpp::wrap(constructMatrix(Xvec, taus, Ss, Fk, Fk1, Psi, nobs));
+    Rcpp::traits::input_parameter< double >::type lower_bound(lower_boundSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Zmat(ZmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(constructMatrix(Xvec, taus, Ss, Fk, Fk1, Psi, nobs, lower_bound, Zmat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// tprs
+double tprs(double x1, double x2, arma::colvec knot);
+RcppExport SEXP _BayesHFLM_tprs(SEXP x1SEXP, SEXP x2SEXP, SEXP knotSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type x1(x1SEXP);
+    Rcpp::traits::input_parameter< double >::type x2(x2SEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type knot(knotSEXP);
+    rcpp_result_gen = Rcpp::wrap(tprs(x1, x2, knot));
+    return rcpp_result_gen;
+END_RCPP
+}
+// constructTPRS
+arma::mat constructTPRS(arma::mat Xvec, arma::colvec taus, arma::colvec Ss, int nobs, arma::mat knots, arma::mat Zmat, double delta);
+RcppExport SEXP _BayesHFLM_constructTPRS(SEXP XvecSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP nobsSEXP, SEXP knotsSEXP, SEXP ZmatSEXP, SEXP deltaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Xvec(XvecSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type taus(tausSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type Ss(SsSEXP);
+    Rcpp::traits::input_parameter< int >::type nobs(nobsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type knots(knotsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Zmat(ZmatSEXP);
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    rcpp_result_gen = Rcpp::wrap(constructTPRS(Xvec, taus, Ss, nobs, knots, Zmat, delta));
     return rcpp_result_gen;
 END_RCPP
 }
 // mcmc_sampler
-Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat Phi, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, double i1, double i2, double a, double b, int niter);
-RcppExport SEXP _BayesHFLM_mcmc_sampler(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP PhiSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP niterSEXP) {
+Rcpp::List mcmc_sampler(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat Phi, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, double i1, double i2, double a, double b, Rcpp::Nullable<Rcpp::NumericVector> lag, int niter, arma::mat Zmat);
+RcppExport SEXP _BayesHFLM_mcmc_sampler(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP PhiSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP lagSEXP, SEXP niterSEXP, SEXP ZmatSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -116,14 +170,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type i2(i2SEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type lag(lagSEXP);
     Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
-    rcpp_result_gen = Rcpp::wrap(mcmc_sampler(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter));
+    Rcpp::traits::input_parameter< arma::mat >::type Zmat(ZmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(mcmc_sampler(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, lag, niter, Zmat));
     return rcpp_result_gen;
 END_RCPP
 }
 // mcmc_sampler2
-Rcpp::List mcmc_sampler2(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat Phi, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, double i1, double i2, double a, double b, int niter);
-RcppExport SEXP _BayesHFLM_mcmc_sampler2(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP PhiSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP niterSEXP) {
+Rcpp::List mcmc_sampler2(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat Phi, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, double i1, double i2, double a, double b, Rcpp::Nullable<Rcpp::NumericVector> lag, int niter, arma::mat Zmat);
+RcppExport SEXP _BayesHFLM_mcmc_sampler2(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP PhiSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP lagSEXP, SEXP niterSEXP, SEXP ZmatSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -145,14 +201,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type i2(i2SEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type lag(lagSEXP);
     Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
-    rcpp_result_gen = Rcpp::wrap(mcmc_sampler2(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter));
+    Rcpp::traits::input_parameter< arma::mat >::type Zmat(ZmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(mcmc_sampler2(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, lag, niter, Zmat));
     return rcpp_result_gen;
 END_RCPP
 }
 // constructMatrix2
-arma::mat constructMatrix2(arma::mat Xvec, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, int nobs);
-RcppExport SEXP _BayesHFLM_constructMatrix2(SEXP XvecSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP nobsSEXP) {
+arma::mat constructMatrix2(arma::mat Xvec, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, int nobs, double delta);
+RcppExport SEXP _BayesHFLM_constructMatrix2(SEXP XvecSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP nobsSEXP, SEXP deltaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -163,13 +221,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type Fk1(Fk1SEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Psi(PsiSEXP);
     Rcpp::traits::input_parameter< int >::type nobs(nobsSEXP);
-    rcpp_result_gen = Rcpp::wrap(constructMatrix2(Xvec, taus, Ss, Fk, Fk1, Psi, nobs));
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    rcpp_result_gen = Rcpp::wrap(constructMatrix2(Xvec, taus, Ss, Fk, Fk1, Psi, nobs, delta));
     return rcpp_result_gen;
 END_RCPP
 }
 // mcmc_sampler3
-Rcpp::List mcmc_sampler3(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat Phi, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, double i1, double i2, double a, double b, int niter);
-RcppExport SEXP _BayesHFLM_mcmc_sampler3(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP PhiSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP niterSEXP) {
+Rcpp::List mcmc_sampler3(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat Phi, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, double i1, double i2, double a, double b, Rcpp::Nullable<Rcpp::NumericVector> lag, int niter);
+RcppExport SEXP _BayesHFLM_mcmc_sampler3(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP PhiSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP lagSEXP, SEXP niterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -191,14 +250,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type i2(i2SEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type lag(lagSEXP);
     Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
-    rcpp_result_gen = Rcpp::wrap(mcmc_sampler3(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter));
+    rcpp_result_gen = Rcpp::wrap(mcmc_sampler3(Yvec, Ymat, Xvec, Xmat, taus, Ss, Fk, Fk1, Psi, Phi, Dmu, Db, Dalpha, Dc, i1, i2, a, b, lag, niter));
     return rcpp_result_gen;
 END_RCPP
 }
 // mcmc_sampler4
-Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::mat Xmat_centered, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat fpcs, arma::mat mux, arma::mat eigs, arma::mat lambda_start, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, double i1, double i2, double a, double b, int niter);
-RcppExport SEXP _BayesHFLM_mcmc_sampler4(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP Xmat_centeredSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP fpcsSEXP, SEXP muxSEXP, SEXP eigsSEXP, SEXP lambda_startSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP niterSEXP) {
+Rcpp::List mcmc_sampler4(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::mat Xmat_centered, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat fpcs, arma::mat mux, arma::mat eigs, arma::mat lambda_start, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, double i1, double i2, double a, double b, Rcpp::Nullable<Rcpp::NumericVector> lag, int niter, arma::mat Zmat);
+RcppExport SEXP _BayesHFLM_mcmc_sampler4(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP Xmat_centeredSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP fpcsSEXP, SEXP muxSEXP, SEXP eigsSEXP, SEXP lambda_startSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP lagSEXP, SEXP niterSEXP, SEXP ZmatSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -224,14 +284,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type i2(i2SEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type lag(lagSEXP);
     Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
-    rcpp_result_gen = Rcpp::wrap(mcmc_sampler4(Yvec, Ymat, Xvec, Xmat, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter));
+    Rcpp::traits::input_parameter< arma::mat >::type Zmat(ZmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(mcmc_sampler4(Yvec, Ymat, Xvec, Xmat, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, i1, i2, a, b, lag, niter, Zmat));
     return rcpp_result_gen;
 END_RCPP
 }
 // mcmc_sampler5
-Rcpp::List mcmc_sampler5(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::mat Xmat_centered, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat fpcs, arma::mat mux, arma::mat eigs, arma::mat lambda_start, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, double i1, double i2, double a, double b, int niter);
-RcppExport SEXP _BayesHFLM_mcmc_sampler5(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP Xmat_centeredSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP fpcsSEXP, SEXP muxSEXP, SEXP eigsSEXP, SEXP lambda_startSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP niterSEXP) {
+Rcpp::List mcmc_sampler5(arma::colvec Yvec, arma::mat Ymat, arma::colvec Xvec, arma::mat Xmat, arma::mat Xmat_centered, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat fpcs, arma::mat mux, arma::mat eigs, arma::mat lambda_start, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, arma::mat Zmat, double i1, double i2, double a, double b, double A, Rcpp::Nullable<Rcpp::NumericVector> lag, int niter);
+RcppExport SEXP _BayesHFLM_mcmc_sampler5(SEXP YvecSEXP, SEXP YmatSEXP, SEXP XvecSEXP, SEXP XmatSEXP, SEXP Xmat_centeredSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP fpcsSEXP, SEXP muxSEXP, SEXP eigsSEXP, SEXP lambda_startSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP ZmatSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP ASEXP, SEXP lagSEXP, SEXP niterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -253,12 +315,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type Db(DbSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Dalpha(DalphaSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Dc(DcSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Zmat(ZmatSEXP);
     Rcpp::traits::input_parameter< double >::type i1(i1SEXP);
     Rcpp::traits::input_parameter< double >::type i2(i2SEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type lag(lagSEXP);
     Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
-    rcpp_result_gen = Rcpp::wrap(mcmc_sampler5(Yvec, Ymat, Xvec, Xmat, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, i1, i2, a, b, niter));
+    rcpp_result_gen = Rcpp::wrap(mcmc_sampler5(Yvec, Ymat, Xvec, Xmat, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, Zmat, i1, i2, a, b, A, lag, niter));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -298,6 +363,111 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// mcmc_sampler6
+Rcpp::List mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat, arma::colvec X1vec, arma::mat Xmat, arma::colvec X2vec, arma::mat Xmat_centered, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat fpcs, arma::mat mux, arma::mat eigs, arma::mat lambda_start, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, arma::mat knots, arma::mat Zmat, double i1, double i2, double a, double b, Rcpp::Nullable<Rcpp::NumericVector> lag, int niter);
+RcppExport SEXP _BayesHFLM_mcmc_sampler6(SEXP YvecSEXP, SEXP YmatSEXP, SEXP X1vecSEXP, SEXP XmatSEXP, SEXP X2vecSEXP, SEXP Xmat_centeredSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP fpcsSEXP, SEXP muxSEXP, SEXP eigsSEXP, SEXP lambda_startSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP knotsSEXP, SEXP ZmatSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP lagSEXP, SEXP niterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::colvec >::type Yvec(YvecSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Ymat(YmatSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type X1vec(X1vecSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Xmat(XmatSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type X2vec(X2vecSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Xmat_centered(Xmat_centeredSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type taus(tausSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type Ss(SsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Fk(FkSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Fk1(Fk1SEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Psi(PsiSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type fpcs(fpcsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type mux(muxSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type eigs(eigsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type lambda_start(lambda_startSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dmu(DmuSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Db(DbSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dalpha(DalphaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dc(DcSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type knots(knotsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Zmat(ZmatSEXP);
+    Rcpp::traits::input_parameter< double >::type i1(i1SEXP);
+    Rcpp::traits::input_parameter< double >::type i2(i2SEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type lag(lagSEXP);
+    Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
+    rcpp_result_gen = Rcpp::wrap(mcmc_sampler6(Yvec, Ymat, X1vec, Xmat, X2vec, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, knots, Zmat, i1, i2, a, b, lag, niter));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sampleRegCoeff
+Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat Dmu, int p, double A, double B, double C, double a, double b, arma::mat curr_delta_guk, arma::mat curr_v_delta, arma::mat curr_lambda, arma::mat curr_p_g, double curr_tau, double curr_a_tau, double curr_sigma_e, double curr_sigma_mu);
+RcppExport SEXP _BayesHFLM_sampleRegCoeff(SEXP RmatSEXP, SEXP YvecSEXP, SEXP dr1SEXP, SEXP DmuSEXP, SEXP pSEXP, SEXP ASEXP, SEXP BSEXP, SEXP CSEXP, SEXP aSEXP, SEXP bSEXP, SEXP curr_delta_gukSEXP, SEXP curr_v_deltaSEXP, SEXP curr_lambdaSEXP, SEXP curr_p_gSEXP, SEXP curr_tauSEXP, SEXP curr_a_tauSEXP, SEXP curr_sigma_eSEXP, SEXP curr_sigma_muSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Rmat(RmatSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type Yvec(YvecSEXP);
+    Rcpp::traits::input_parameter< int >::type dr1(dr1SEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dmu(DmuSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< double >::type A(ASEXP);
+    Rcpp::traits::input_parameter< double >::type B(BSEXP);
+    Rcpp::traits::input_parameter< double >::type C(CSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type curr_delta_guk(curr_delta_gukSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type curr_v_delta(curr_v_deltaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type curr_lambda(curr_lambdaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type curr_p_g(curr_p_gSEXP);
+    Rcpp::traits::input_parameter< double >::type curr_tau(curr_tauSEXP);
+    Rcpp::traits::input_parameter< double >::type curr_a_tau(curr_a_tauSEXP);
+    Rcpp::traits::input_parameter< double >::type curr_sigma_e(curr_sigma_eSEXP);
+    Rcpp::traits::input_parameter< double >::type curr_sigma_mu(curr_sigma_muSEXP);
+    rcpp_result_gen = Rcpp::wrap(sampleRegCoeff(Rmat, Yvec, dr1, Dmu, p, A, B, C, a, b, curr_delta_guk, curr_v_delta, curr_lambda, curr_p_g, curr_tau, curr_a_tau, curr_sigma_e, curr_sigma_mu));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mcmc_sampler7
+Rcpp::List mcmc_sampler7(arma::colvec Yvec, arma::mat Ymat, arma::colvec X1vec, arma::mat Xmat, arma::colvec X2vec, arma::mat Xmat_centered, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat fpcs, arma::mat mux, arma::mat eigs, arma::mat lambda_start, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Dc, arma::mat knots, arma::mat Zmat, double i1, double i2, double a, double b, double A, double B, double C, Rcpp::Nullable<Rcpp::NumericVector> lag, int niter);
+RcppExport SEXP _BayesHFLM_mcmc_sampler7(SEXP YvecSEXP, SEXP YmatSEXP, SEXP X1vecSEXP, SEXP XmatSEXP, SEXP X2vecSEXP, SEXP Xmat_centeredSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP fpcsSEXP, SEXP muxSEXP, SEXP eigsSEXP, SEXP lambda_startSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP DcSEXP, SEXP knotsSEXP, SEXP ZmatSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP ASEXP, SEXP BSEXP, SEXP CSEXP, SEXP lagSEXP, SEXP niterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::colvec >::type Yvec(YvecSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Ymat(YmatSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type X1vec(X1vecSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Xmat(XmatSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type X2vec(X2vecSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Xmat_centered(Xmat_centeredSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type taus(tausSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type Ss(SsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Fk(FkSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Fk1(Fk1SEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Psi(PsiSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type fpcs(fpcsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type mux(muxSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type eigs(eigsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type lambda_start(lambda_startSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dmu(DmuSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Db(DbSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dalpha(DalphaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dc(DcSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type knots(knotsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Zmat(ZmatSEXP);
+    Rcpp::traits::input_parameter< double >::type i1(i1SEXP);
+    Rcpp::traits::input_parameter< double >::type i2(i2SEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type A(ASEXP);
+    Rcpp::traits::input_parameter< double >::type B(BSEXP);
+    Rcpp::traits::input_parameter< double >::type C(CSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type lag(lagSEXP);
+    Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
+    rcpp_result_gen = Rcpp::wrap(mcmc_sampler7(Yvec, Ymat, X1vec, Xmat, X2vec, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, knots, Zmat, i1, i2, a, b, A, B, C, lag, niter));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_rcpparma_outerproduct", (DL_FUNC) &_BayesHFLM_rcpparma_outerproduct, 1},
@@ -306,16 +476,23 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_myfirstfunc", (DL_FUNC) &_BayesHFLM_myfirstfunc, 0},
     {"_BayesHFLM_sampleMVN", (DL_FUNC) &_BayesHFLM_sampleMVN, 2},
     {"_BayesHFLM_data_matrix", (DL_FUNC) &_BayesHFLM_data_matrix, 3},
-    {"_BayesHFLM_constructMatrix", (DL_FUNC) &_BayesHFLM_constructMatrix, 7},
-    {"_BayesHFLM_mcmc_sampler", (DL_FUNC) &_BayesHFLM_mcmc_sampler, 19},
-    {"_BayesHFLM_mcmc_sampler2", (DL_FUNC) &_BayesHFLM_mcmc_sampler2, 19},
-    {"_BayesHFLM_constructMatrix2", (DL_FUNC) &_BayesHFLM_constructMatrix2, 7},
-    {"_BayesHFLM_mcmc_sampler3", (DL_FUNC) &_BayesHFLM_mcmc_sampler3, 19},
-    {"_BayesHFLM_mcmc_sampler4", (DL_FUNC) &_BayesHFLM_mcmc_sampler4, 23},
-    {"_BayesHFLM_mcmc_sampler5", (DL_FUNC) &_BayesHFLM_mcmc_sampler5, 23},
+    {"_BayesHFLM_is_null", (DL_FUNC) &_BayesHFLM_is_null, 1},
+    {"_BayesHFLM_isLag", (DL_FUNC) &_BayesHFLM_isLag, 1},
+    {"_BayesHFLM_constructMatrix", (DL_FUNC) &_BayesHFLM_constructMatrix, 9},
+    {"_BayesHFLM_tprs", (DL_FUNC) &_BayesHFLM_tprs, 3},
+    {"_BayesHFLM_constructTPRS", (DL_FUNC) &_BayesHFLM_constructTPRS, 7},
+    {"_BayesHFLM_mcmc_sampler", (DL_FUNC) &_BayesHFLM_mcmc_sampler, 21},
+    {"_BayesHFLM_mcmc_sampler2", (DL_FUNC) &_BayesHFLM_mcmc_sampler2, 21},
+    {"_BayesHFLM_constructMatrix2", (DL_FUNC) &_BayesHFLM_constructMatrix2, 8},
+    {"_BayesHFLM_mcmc_sampler3", (DL_FUNC) &_BayesHFLM_mcmc_sampler3, 20},
+    {"_BayesHFLM_mcmc_sampler4", (DL_FUNC) &_BayesHFLM_mcmc_sampler4, 25},
+    {"_BayesHFLM_mcmc_sampler5", (DL_FUNC) &_BayesHFLM_mcmc_sampler5, 26},
     {"_BayesHFLM_vector_test", (DL_FUNC) &_BayesHFLM_vector_test, 1},
     {"_BayesHFLM_make_mat", (DL_FUNC) &_BayesHFLM_make_mat, 3},
     {"_BayesHFLM_sum_mat", (DL_FUNC) &_BayesHFLM_sum_mat, 2},
+    {"_BayesHFLM_mcmc_sampler6", (DL_FUNC) &_BayesHFLM_mcmc_sampler6, 27},
+    {"_BayesHFLM_sampleRegCoeff", (DL_FUNC) &_BayesHFLM_sampleRegCoeff, 18},
+    {"_BayesHFLM_mcmc_sampler7", (DL_FUNC) &_BayesHFLM_mcmc_sampler7, 30},
     {NULL, NULL, 0}
 };
 
