@@ -89,7 +89,15 @@ sampleRegCoeff <- function(Rmat, Yvec, dr1, Dmu, p, A, B, C, a, b, curr_delta_gu
     .Call(`_BayesHFLM_sampleRegCoeff`, Rmat, Yvec, dr1, Dmu, p, A, B, C, a, b, curr_delta_guk, curr_v_delta, curr_lambda, curr_p_g, curr_tau, curr_a_tau, curr_sigma_e, curr_sigma_mu)
 }
 
-mcmc_sampler7 <- function(Yvec, Ymat, X1vec, Xmat, X2vec, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, knots, Zmat, i1, i2, a, b, A, B, C, lag, niter) {
-    .Call(`_BayesHFLM_mcmc_sampler7`, Yvec, Ymat, X1vec, Xmat, X2vec, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Dc, knots, Zmat, i1, i2, a, b, A, B, C, lag, niter)
+sampleFuncCov <- function(Xmat_centered, Xvec, fpca_x, Fmat, mu_x, curr_sigma_v, eps, nobs, ntaus, a, b, i1, i2) {
+    .Call(`_BayesHFLM_sampleFuncCov`, Xmat_centered, Xvec, fpca_x, Fmat, mu_x, curr_sigma_v, eps, nobs, ntaus, a, b, i1, i2)
+}
+
+mcmc_sampler7 <- function(Yvec, Ymat, X1vec, Xmat, X2vec, Xmat1_centered, Xmat2_centered, taus, Ss, Fk, Fk1, Psi, fpca_x1, fpca_x2, mu_x1, mu_x2, npc, eigs, eps_start, Dmu, Db, Dalpha, Dc, knots, Zmat, i1, i2, a, b, A, B, C, lag, niter, smooth) {
+    .Call(`_BayesHFLM_mcmc_sampler7`, Yvec, Ymat, X1vec, Xmat, X2vec, Xmat1_centered, Xmat2_centered, taus, Ss, Fk, Fk1, Psi, fpca_x1, fpca_x2, mu_x1, mu_x2, npc, eigs, eps_start, Dmu, Db, Dalpha, Dc, knots, Zmat, i1, i2, a, b, A, B, C, lag, niter, smooth)
+}
+
+silly_mistake <- function(a) {
+    .Call(`_BayesHFLM_silly_mistake`, a)
 }
 

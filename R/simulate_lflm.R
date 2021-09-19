@@ -18,6 +18,8 @@ library(viridisLite)
 create.regression.surface <- function(taus, s, n.tau, type, delta){
   # Generate regression surface
   theta.s.tau <- matrix(0, n.tau, n.tau)
+  
+  if(type != "null"){
   i <- 1
   indx <- NULL
   for (tau in taus){
@@ -64,6 +66,7 @@ create.regression.surface <- function(taus, s, n.tau, type, delta){
    
   i <- i + 1
   }
+  }
   #print(theta.s.tau)
   return(theta.s.tau)
 }
@@ -83,7 +86,7 @@ create.lag.matrix <- function(delta, taus, S, ntaus){
 
 # Calculate error for Y using the expected signal 
 # ratio
-calculate.error <- function(eSNR = 5, yij, nobs, n.tau, ntest = 10){
+calculate.error <- function(eSNR = 5, yij, nobs, n.tau){
   # Yij is N X T
   # Find the mean of each column (mean of each taus){} Y.j
   A <- apply(yij, 2, function(x) sum(x)/nobs)
@@ -93,16 +96,17 @@ calculate.error <- function(eSNR = 5, yij, nobs, n.tau, ntest = 10){
 }
 
 simulate.hflm <- function(nobs = 100 , n.tau = 25,
-                          varx1 = 0.1, varx2 = 0.1, eSNR = 5,  delta = NULL, plot = TRUE){
- 
-  # Simulation setting by Meyer et al. (... )
+                          beta1 = "bimodal-lagged" , varx1 = 0.1, 
+                          beta2 = "null", varx2 = 0.1, eSNR = 5,  
+                          delta = NULL, plot = TRUE, seed = 1234){
+  set.seed(seed)
   # Generate taus and S on the same regular interval in [0,1]
   taus <- Ss <- seq(0,1, length.out = n.tau)
   dv <- taus[2]
   # Evaluate regression surface
   theta1.s.tau <- create.regression.surface(taus, Ss, n.tau, type = "bimodal-lagged", delta)
   theta2.s.tau <- matrix(0, n.tau, n.tau)#create.regression.surface(taus, Ss, n.tau, type = "peaked", delta)
-  
+  #
   theta1.v.tau <- t(t(theta1.s.tau)*c(1,taus[-1]))
   theta2.v.tau <- t(t(theta2.s.tau)*c(1,taus[-1]))
   
