@@ -81,8 +81,8 @@ sum_mat <- function(A, B) {
     .Call(`_BayesHFLM_sum_mat`, A, B)
 }
 
-mcmc_sampler6 <- function(Yvec, Ymat, X1vec, Xmat, X2vec, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Zmat, i1, i2, a, b, lag, niter) {
-    .Call(`_BayesHFLM_mcmc_sampler6`, Yvec, Ymat, X1vec, Xmat, X2vec, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Zmat, i1, i2, a, b, lag, niter)
+mcmc_sampler6 <- function(Yvec, Ymat, X1vec, X2vec, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Zmat, i1, i2, a, b, lag, niter) {
+    .Call(`_BayesHFLM_mcmc_sampler6`, Yvec, Ymat, X1vec, X2vec, Xmat_centered, taus, Ss, Fk, Fk1, Psi, fpcs, mux, eigs, lambda_start, Dmu, Db, Dalpha, Zmat, i1, i2, a, b, lag, niter)
 }
 
 sampleRegCoeff <- function(Rmat, Yvec, dr1, Dmu, p, A, B, C, a, b, curr_delta_guk, curr_v_delta, curr_lambda, curr_p_g, curr_tau, curr_a_tau, curr_sigma_e, curr_sigma_mu) {

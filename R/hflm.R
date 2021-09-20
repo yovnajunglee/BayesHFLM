@@ -60,7 +60,7 @@ create.design.matrix <- function(Xmat, ntaus, Ss, nobs, U, K, Fk, Psi, delta){
 # Construct regression surface from the vector
 # of coefficients
 reconstruct.surface <- function(buk, Fk, K, Psi, U, start, end, ntaus, Zmat.inv){
-  buk.mat <- matrix(Zmat.inv%*%keep[start:end], ncol = K, nrow = U, byrow = FALSE) # U X K
+  buk.mat <- matrix(Zmat.inv%*%buk[start:end], ncol = K, nrow = U, byrow = FALSE) # U X K
   theta.hat <- matrix(NA, nrow = ntaus, ncol = ntaus)
   for(ss in 1:ntaus){
     for(tj in 1:ntaus){
@@ -218,19 +218,21 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
     # This implements the MVN with prior precision matrix = penalty matrix
     # !!NB: Functional covariates are not smoothed here
     mcmc_results = mcmc_sampler6(c(t(Ymat_fit)), Ymat_fit,
-                                 c(t(Xmat1)), Xmat_centered, 
-                                 c(t(Xmat2)),Xmat_centered, 
+                                 c(t(Xmat1)), 
+                                 c(t(Xmat2)), Xmat1_centered, 
                                  taus, Ss,
                                  Fk_fit, Fk1, Psi,
                                  as.matrix(fpca_x1$efunctions),
-                                 mu1_mat, matrix(fpca_x1$evalues, ncol = 1), eps_start,  
+                                 mu1_mat, matrix(fpca_x1$evalues, ncol = 1), eps_start[1:U,],  
                                  Dmu, Db.d, Dalpha, Zmat.inv, 
                                  mcmc_hyper$i1, mcmc_hyper$i2, 
                                  mcmc_hyper$a,mcmc_hyper$b,
                                  lag, niter)
   }
 
-  keep <- mcmc_results$alpha[,(nburn*niter):niter]
+  keep <- matrix(apply(mcmc_results$alpha[,(nburn*niter):niter],1,mean), ncol = 1)
+  #print("keep")
+  #print(keep)
   
   # 7. Process results
   

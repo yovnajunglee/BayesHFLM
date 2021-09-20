@@ -1449,13 +1449,14 @@ double sum_mat(arma::mat A, arma::mat B){
 // MCMC sampler without smoothing x and 2 covariates
 // [[Rcpp::export]]
 Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
-                         arma::colvec X1vec, arma::mat Xmat, arma::colvec X2vec, arma::mat Xmat_centered, 
+                         arma::colvec X1vec, arma::colvec X2vec, arma::mat Xmat_centered, 
                          arma::colvec taus, arma::colvec Ss,
                          arma::mat Fk, arma::mat Fk1, arma::mat Psi, 
                          arma::mat fpcs, arma::mat mux, arma::mat eigs, arma::mat lambda_start, // chnage here
                          arma::mat Dmu, arma::mat Db, arma::mat Dalpha,
                          arma::mat Zmat,
-                         double i1, double i2, double a, double b,  Rcpp::Nullable<Rcpp::NumericVector> lag, int niter){
+                         double i1, double i2, double a, double b, 
+                         Rcpp::Nullable<Rcpp::NumericVector> lag, int niter){
   
   // =======================================
   // Find dimensions
