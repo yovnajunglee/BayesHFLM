@@ -270,7 +270,7 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
 }
 
-
+# R function to generate predicted values based on hflm_mcmc parameters
 predict_hflm  = function(hflm_mcmc, X1_new, X2_new, taus, DEL){
   preds <- (X1_new%*%(hflm_mcmc$beta_hat$beta1*(taus[16]-taus[15]))+
              X2_new%*%(hflm_mcmc$beta_hat$beta2*(taus[16]-taus[15])))[,taus>=DEL]+
