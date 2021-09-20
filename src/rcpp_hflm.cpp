@@ -1454,7 +1454,7 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
                          arma::mat Fk, arma::mat Fk1, arma::mat Psi, 
                          arma::mat fpcs, arma::mat mux, arma::mat eigs, arma::mat lambda_start, // chnage here
                          arma::mat Dmu, arma::mat Db, arma::mat Dalpha,
-                         arma::mat Dc, arma::mat knots, arma::mat Zmat,
+                         arma::mat Zmat,
                          double i1, double i2, double a, double b,  Rcpp::Nullable<Rcpp::NumericVector> lag, int niter){
   
   // =======================================
@@ -1668,7 +1668,7 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
   arma::mat prior_cov(K1 + p*dr1, K1 + p*dr1, fill::zeros);
   prior_cov.submat(0, 0, Dmu.n_cols - 1, Dmu.n_cols - 1 ) =  (1/curr_sigma_mu)*Dmu;
   prior_cov.submat(Dmu.n_cols,Dmu.n_cols , dr - 1, dr - 1 ) = (1/curr_tau)*Dmat_inv;
-  //must global parameters + predictor param + within pred para,
+  //must global parameters + predictor param + within pred param 
   
   // ==========================================================
   // Sample parameters for alphas from MVN
@@ -1694,7 +1694,10 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
   // Sample Horseshoe prior parameters
   // ==========================================================
   
+  // -------------------------------------
   // Global scale parameter
+  // -------------------------------------
+  
   // double myval = 0.009;
   std::cout << "Sampling taus" << std::endl;
   //std::cout << 0.5*as_scalar((alpha_sample.rows(K1, dr - 1).t()*Dmat_inv*alpha_sample.rows(K1, dr - 1))) +
@@ -1706,7 +1709,10 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
   std::cout << tau_sample << std::endl;
   std::cout << a_tau_sample << std::endl;
   
+  // -------------------------------------
   // Local predictor level shrinkage
+  // -------------------------------------
+
   arma::mat lambda(p,1);
   arma::mat p_g(p,1);
   std::cout << "Sampling lambda" << std::endl;
@@ -1715,11 +1721,17 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
     curr_delta_g = curr_delta_guk.rows(g*dr1, (g+1)*dr1 - 1);
     //std::cout << alpha_sample.rows(K1+ g*dr1 ,K1 + (g+1)*dr1 - 1).t()*diagmat(1/(tau_sample*curr_delta_g))*
      // alpha_sample.rows(K1+ g*dr1 ,K1 + (g+1)*dr1 - 1) << std::endl;
+     
     // Evaluate the rate parameter for each lambda_g
+    
     double rate_lambdag = 0.5*as_scalar(alpha_sample.rows(K1+ g*dr1 ,K1 + (g+1)*dr1 - 1).t()*diagmat(1/(tau_sample*curr_delta_g))*
       alpha_sample.rows(K1+ g*dr1 ,K1 + (g+1)*dr1 - 1)) + (1/as_scalar(curr_p_g(g, 0)));
     
+    // Sample lambda_g
+    
     lambda(g,0) =  1/arma::randg<double>( distr_param(0.5*dr1 + 0.5, 1/rate_lambdag));
+    
+    // Sample p_g
     
     p_g(g,0) = 1/arma::randg<double>( distr_param(1.00, 1/((1/lambda(g,0))+(1/pow(B,2)))));
     std::cout << lambda(g,0) << std::endl;
@@ -1727,7 +1739,10 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
     
   }
   
+  // -------------------------------------
   // Within predictor level shrinkage
+  // -------------------------------------
+  
   arma::mat delta_guk(p*dr1, 1);
   arma::mat v_delta(p*dr1, 1);
   double g_uk = 0;
@@ -1740,9 +1755,9 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
       double rate_delta_guk = 0.5*(1/(tau_sample*lambda(gg,0)))*pow(as_scalar(alpha_sample(K1+ gg*dr1 + uk)),2) + 
       1/as_scalar(curr_v_delta(g_uk,0));
         
-      delta_guk(g_uk,0) =  1/arma::randg<double>( distr_param(1.00, 1/rate_delta_guk));
+      delta_guk(g_uk,0) =  1;//1/arma::randg<double>( distr_param(1.00, 1/rate_delta_guk));
       
-      v_delta(g_uk,0) = 1/arma::randg<double>(distr_param(1.00, 1/((1/(delta_guk(g_uk,0)))+(1/pow(C,2)))));
+      v_delta(g_uk,0) = 1;// 1/arma::randg<double>(distr_param(1.00, 1/((1/(delta_guk(g_uk,0)))+(1/pow(C,2)))));
       //std::cout << delta_guk(g_uk,0) << std::endl;
       // std::cout << v_delta(g_uk,0) << std::endl;
       
@@ -1838,7 +1853,7 @@ Rcpp::List sampleFuncCov(arma::mat Xmat_centered, arma::colvec Xvec, arma::mat f
 // MCMC sampler without smoothing x and 2 covariates, Grouped horseshoe prior
 // [[Rcpp::export]]
 Rcpp::List  mcmc_sampler7(arma::colvec Yvec, arma::mat Ymat,
-                          arma::colvec X1vec, arma::mat Xmat, arma::colvec X2vec, 
+                          arma::colvec X1vec, arma::colvec X2vec, 
                           arma::mat Xmat1_centered, arma::mat Xmat2_centered, 
                           arma::colvec taus, arma::colvec Ss,
                           arma::mat Fk, arma::mat Fk1, arma::mat Psi, 
@@ -1846,7 +1861,7 @@ Rcpp::List  mcmc_sampler7(arma::colvec Yvec, arma::mat Ymat,
                           int npc,
                           arma::mat eigs, arma::mat eps_start, // chnage here
                           arma::mat Dmu, arma::mat Db, arma::mat Dalpha,
-                          arma::mat Dc, arma::mat knots, arma::mat Zmat,
+                          arma::mat Zmat,
                           double i1, double i2, double a, double b, double A, double B, double C,
                           Rcpp::Nullable<Rcpp::NumericVector> lag, int niter, bool smooth){
   // =======================================
