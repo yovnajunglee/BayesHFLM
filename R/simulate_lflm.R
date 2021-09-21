@@ -36,7 +36,7 @@ create.regression.surface <- function(taus, s, n.tau, type, delta){
     #{indx <- -which(s == delta) }
     else if (tau < delta){indx <- 1:n.tau}
   }
-   print(indx)
+   #print(indx)
    if(type == "bimodal-lagged"){
      sx = 0.3
      sz = 0.4
@@ -67,7 +67,7 @@ create.regression.surface <- function(taus, s, n.tau, type, delta){
   i <- i + 1
   }
   }
-  #print(theta.s.tau)
+  ##print(theta.s.tau)
   return(theta.s.tau)
 }
 
@@ -146,14 +146,21 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25,
                  ncol = n.tau, nrow = nobs)
   Y.tau <- Y.tau + etau
   
-  print(calculate.error(eSNR, Y.tau, nobs, n.tau))
+  #print(calculate.error(eSNR, Y.tau, nobs, n.tau))
+  #print((sd(Y.tau)/eSNR)^2)
+  
   # Add measurement error to predictors
   X1.tau <-(X1.tau) + matrix(rnorm(n = nobs*n.tau,
                                  mean = 0 , sd = sqrt(varx1)),
                            nrow = nobs, ncol = n.tau)
+  ##print((sd(X1.tau)/sqrt(varx1)))
+
   X2.tau <-(X2.tau) + matrix(rnorm(n = nobs*n.tau,
                                  mean = 0 , sd = sqrt(varx2)),
                            nrow = nobs, ncol = n.tau)
+
+ # #print((sd(X2.tau)/sqrt(varx2)))
+  
   if(plot){
     par(mfrow=c(2,3))
     plot(Y.tau[1,]~taus, type = 'l', ylim = c(min(Y.tau), max(Y.tau)))#, xlim = c(taus[taus>=delta][1], 1))

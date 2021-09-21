@@ -217,6 +217,8 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   else{
     # This implements the MVN with prior precision matrix = penalty matrix
     # !!NB: Functional covariates are not smoothed here
+    print(paste0("Fitting a Bayes HFLM model with a ", prior , " prior, delta = ", lag,
+                 ", smooth the predictor = ", smooth, "."))
     mcmc_results = mcmc_sampler6(c(t(Ymat_fit)), Ymat_fit,
                                  c(t(Xmat1)), 
                                  c(t(Xmat2)), Xmat1_centered, 

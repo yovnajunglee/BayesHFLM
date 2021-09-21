@@ -127,7 +127,7 @@ arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
     // Evaluate no. of observations
     int ntau = taus.n_elem; //Xmat.n_cols;
     int ns = Ss.n_elem; //Xmat.n_cols;
-    std::cout << lower_bound << std::endl;
+    //std::cout << lower_bound << std::endl;
     //int nobs = Xmat.n_rows;
     int totals = ntau*nobs;
     int U = Psi.n_cols;
@@ -1557,7 +1557,7 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
 
     
     
-    std::cout << dr1 << std::endl;
+    //std::cout << dr1 << std::endl;
     
 
     // Create vector sigmas
@@ -1568,13 +1568,13 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
     ////std::cout << "omegaf ... " << std::endl;
 
     Omegaf = repmat(sigs,1, Dalpha.n_cols)%Dalpha;
-    std::cout << " sigmaalphas ... " << std::endl;
+    //std::cout << " sigmaalphas ... " << std::endl;
     
     SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat); //+ 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
-    std::cout << "mu  alphas ... " << std::endl;
+    //std::cout << "mu  alphas ... " << std::endl;
     //std::cout << Omegaf << std::endl;
-    std::cout << Dalpha.is_symmetric() << std::endl;
-    std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
+    //std::cout << Dalpha.is_symmetric() << std::endl;
+    //std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
     //std::cout << SigmaAlph.eigenvalues() <<std::endl;
     muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
     alpha_sample = sampleMVN(muAlpha, SigmaAlph);
@@ -1595,14 +1595,14 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
     rate_mu = b + 0.5*as_scalar((alpha_sample.rows(0, K1-1).t()*Dmu*alpha_sample.rows(0, K1-1)));
     sigma_mu_sample =  1/arma::randg<double>(distr_param(shape_mu,1/rate_mu));
     
-    std::cout << "shape b1 ... " << std::endl;
+    //std::cout << "shape b1 ... " << std::endl;
     shape_b1 = (dr1)/2 + a;
     //std::cout << "rate b ... " << std::endl;
     
     rate_b1 = b + 0.5*as_scalar((alpha_sample.rows(K1, nknots+ K1 - 1).t()*Db*alpha_sample.rows(K1, nknots + K1 - 1)));
     sigma_b1_sample =  1/arma::randg<double>( distr_param(shape_b1,1/rate_b1));
     
-    std::cout << "shape b2 ... " << std::endl;
+    //std::cout << "shape b2 ... " << std::endl;
     shape_b2 =(dr2)/2 + a;
     //std::cout << "rate b ... " << std::endl;
     
