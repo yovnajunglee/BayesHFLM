@@ -1609,6 +1609,8 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
   arma::mat F2mat  = kron(arma::eye(nobs,nobs), fpca_x2);
   
   arma::mat Rmat_check(K1 + p*U*K, niter);
+  arma::mat x1_sims(ntaus*nobs, niter);
+  arma::mat x2_sims(ntaus*nobs, niter);
   
   for (int iter = 1; iter < niter; ++iter){
     
@@ -1630,8 +1632,9 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
       
       // Extract samples for first cov. and store
       arma::mat x1_sample = funcCov_sample1["Xsample"];
-      
+      x1_sims.col(iter) = x1_sample;
       arma::mat xi1_sample = funcCov_sample1["xi_sample"];
+      
       //std::cout << xi1_sample.n_rows << std::endl;
       
       xi.col(iter).rows(0, nobs*npc - 1)  = xi1_sample;
@@ -1645,6 +1648,7 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
       
       // Extract samples for first cov. and store
       arma::mat x2_sample = funcCov_sample2["Xsample"];
+      x2_sims.col(iter) = x2_sample;
       
       arma::mat xi2_sample = funcCov_sample2["xi_sample"];
       xi.col(iter).rows(nobs*npc, p*nobs*npc - 1)  = xi2_sample;
@@ -1658,12 +1662,16 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
       Rmat  =  arma::join_horiz(FF1,
                                 constructMatrix(x1_sample, taus, Ss, Fk, Fk1, Psi,nobs, delta, Zmat),
                                 constructMatrix(x2_sample, taus, Ss, Fk, Fk1, Psi,nobs, delta, Zmat));
+      std::cout << x1_sample(0,0) << std::endl;
+      std::cout<<constructMatrix(x1_sample, taus, Ss, Fk, Fk1, Psi,nobs, delta, Zmat).col(0).row(0) << std::endl;
+      //std::cout << x2_sample(0,0) << std::endl;
       
       Rmat_check.col(iter) = reshape(Rmat, Rmat.n_cols, 1);
     }
     
     
-
+    std::cout << Rmat(0,10) << std::endl;
+    
     // Create vector sigmas
     sigs = join_vert(ones(K1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
                      ones(dr1, 1)*(1/as_scalar(sigma_b1.col(iter -1))), 
@@ -1735,7 +1743,9 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
                             Rcpp::Named("sigmav") = sigma_v,
                             Rcpp::Named("xi") = xi,
                             Rcpp::Named("eps") = eps,
-                            Rcpp::Named("Rmat") = Rmat_check);
+                            Rcpp::Named("Rmat") = Rmat_check,
+                            Rcpp::Named("x1") = x1_sims, 
+                            Rcpp::Named("x2") = x2_sims);
 }
 
 
