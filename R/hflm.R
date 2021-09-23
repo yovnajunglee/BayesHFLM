@@ -220,16 +220,18 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
     print(paste0("Fitting a Bayes HFLM model with a ", prior , " prior, delta = ", lag,
                  ", smooth the predictor = ", smooth, "."))
     mcmc_results = mcmc_sampler6(c(t(Ymat_fit)), Ymat_fit,
-                                 c(t(Xmat1)), 
-                                 c(t(Xmat2)), Xmat1_centered, 
+                                 c(t(Xmat1)), c(t(Xmat2)), 
+                                 Xmat1_centered, Xmat2_centered,
                                  taus, Ss,
                                  Fk_fit, Fk1, Psi,
-                                 as.matrix(fpca_x1$efunctions),
-                                 mu1_mat, matrix(fpca_x1$evalues, ncol = 1), as.matrix(eps_start[1:U,]),  
+                                 as.matrix(fpca_x1$efunctions),as.matrix(fpca_x2$efunctions),
+                                 mu1_mat, mu2_mat, U,  
+                                 matrix(c(fpca_x1$evalues,fpca_x2$evalues), ncol = 1),
+                                 eps_start, 
                                  Dmu, Db.d, Dalpha, Zmat.inv, 
                                  mcmc_hyper$i1, mcmc_hyper$i2, 
                                  mcmc_hyper$a,mcmc_hyper$b,
-                                 lag, niter)
+                                 lag, niter, smooth)
   }
 
   keep <- matrix(apply(mcmc_results$alpha[,(nburn*niter):niter],1,mean), ncol = 1)
