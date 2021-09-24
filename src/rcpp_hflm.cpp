@@ -1662,15 +1662,15 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
       Rmat  =  arma::join_horiz(FF1,
                                 constructMatrix(x1_sample, taus, Ss, Fk, Fk1, Psi,nobs, delta, Zmat),
                                 constructMatrix(x2_sample, taus, Ss, Fk, Fk1, Psi,nobs, delta, Zmat));
-      std::cout << x1_sample(0,0) << std::endl;
-      std::cout<<constructMatrix(x1_sample, taus, Ss, Fk, Fk1, Psi,nobs, delta, Zmat).col(0).row(0) << std::endl;
+      //std::cout << x1_sample(0,0) << std::endl;
+      //std::cout<<constructMatrix(x1_sample, taus, Ss, Fk, Fk1, Psi,nobs, delta, Zmat).col(0).row(0) << std::endl;
       //std::cout << x2_sample(0,0) << std::endl;
       
       Rmat_check.col(iter) = reshape(Rmat, Rmat.n_cols, 1);
     }
     
     
-    std::cout << Rmat(0,10) << std::endl;
+    //std::cout << Rmat(0,10) << std::endl;
     
     // Create vector sigmas
     sigs = join_vert(ones(K1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
