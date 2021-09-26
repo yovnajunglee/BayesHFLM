@@ -104,8 +104,8 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25,
   taus <- Ss <- seq(0,1, length.out = n.tau)
   dv <- taus[2]
   # Evaluate regression surface
-  theta1.s.tau <- create.regression.surface(taus, Ss, n.tau, type = "bimodal-lagged", delta)
-  theta2.s.tau <- create.regression.surface(taus, Ss, n.tau, type = "peaked", delta)
+  theta1.s.tau <- create.regression.surface(taus, Ss, n.tau, type = beta1, delta)
+  theta2.s.tau <- create.regression.surface(taus, Ss, n.tau, type = beta2, delta)
   #
   theta1.v.tau <- t(t(theta1.s.tau)*c(1,taus[-1]))
   theta2.v.tau <- t(t(theta2.s.tau)*c(1,taus[-1]))
