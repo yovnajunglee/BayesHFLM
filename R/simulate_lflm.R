@@ -74,15 +74,15 @@ create.regression.surface <- function(taus, s, n.tau, type, delta){
 #theta <- create.regression.surface(taus, Ss, ntaus, 0.5)
 
 # Create an indicator matrix
-create.lag.matrix <- function(delta, taus, S, ntaus){
-  ind <- expand.grid(taus , S)
-  indd <- rep(1, ntaus*ntaus)
-  ub <- sapply(ind$Var1, function(x){max(x - delta, 0)})
-  indd[which(ind$Var2>ind$Var1 | ind$Var2 < ub)] <-0
-  ind <- cbind(ind, ub, indd)
-  indmat <- matrix(indd, nrow= ntaus, ncol = ntaus, byrow=TRUE)
-  return(indmat)
-}
+#create.lag.matrix <- function(delta, taus, S, ntaus){
+#   ind <- expand.grid(taus , S)
+#   indd <- rep(1, ntaus*ntaus)
+#   ub <- sapply(ind$Var1, function(x){max(x - delta, 0)})
+#   indd[which(ind$Var2>ind$Var1 | ind$Var2 < ub)] <-0
+#   ind <- cbind(ind, ub, indd)
+#   indmat <- matrix(indd, nrow= ntaus, ncol = ntaus, byrow=TRUE)
+#   return(indmat)
+# }
 
 # Calculate error for Y using the expected signal 
 # ratio

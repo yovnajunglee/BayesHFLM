@@ -133,7 +133,7 @@ arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
     int U = Psi.n_cols;
     int K = Fk.n_cols;
     // Initialise matrix
-    //std::cout << "reshape" << std::endl;
+    std::cout << "reshape" << std::endl;
     arma::mat Xmat =  reshape(Xvec, ns, nobs).t();
     //data_matrix(Xvec, ntau, nobs);
     arma::mat Xtil(totals, U);
@@ -1532,10 +1532,11 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
   int U = Psi.n_cols; // Size of second basis function (wrt v) [part of tensor product]
   int totals = nobs*ntaus; 
   double delta = isLag(lag);
+  int ns = Xmat1_centered.n_cols;
   int p = 2;
   
   // Initialise parameters
-  ////std::cout << "init Rmat ... " << std::endl;
+  std::cout << "init Rmat ... " << std::endl;
   arma::mat Rmat1 = constructMatrix(X1vec, taus, Ss, Fk, Fk1, Psi,  nobs, delta, Zmat); 
   //arma::mat Rmat1 = constructTPRS(X1vec, taus, Ss,  nobs, knots, Zmat, delta); 
   arma::mat Rmat2 =constructMatrix(X2vec, taus, Ss, Fk, Fk1, Psi,  nobs, delta, Zmat); 
@@ -1565,8 +1566,8 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
   
   arma::mat sigma_mu(1, niter);
   sigma_mu.col(0) = 10; // arma::randu(1);
-  
-  arma::mat Xsample(totals, 1);
+  int nX = Xmat1_centered.n_rows;
+  arma::mat Xsample(nX*ntaus, 1);
   arma::mat sigs(dr, dr);
   arma::mat Omegaf(dr, dr);
   arma::mat SigmaAlph(dr, dr);
@@ -1601,47 +1602,49 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
   arma::mat sigma_v(p, niter);
   sigma_v.col(0) = arma::randu(p);
   
-  arma::mat xi(p*nobs*npc, niter);
-  xi.col(0) = arma::randu(p*nobs*npc);
+  arma::mat xi(p*nX*npc, niter);
+  xi.col(0) = arma::randu(p*nX*npc);
   
   
-  arma::mat F1mat  = kron(arma::eye(nobs,nobs), fpca_x1);
-  arma::mat F2mat  = kron(arma::eye(nobs,nobs), fpca_x2);
+  arma::mat F1mat  = kron(arma::eye(nX,nX), fpca_x1);
+  arma::mat F2mat  = kron(arma::eye(nX,nX), fpca_x2);
   
   arma::mat Rmat_check(K1 + p*U*K, niter);
-  arma::mat x1_sims(ntaus*nobs, niter);
-  arma::mat x2_sims(ntaus*nobs, niter);
+  arma::mat x1_sims(ns*nX, niter);
+  arma::mat x2_sims(ns*nX, niter);
+  
+  arma::mat Yfit_sample(ntaus*nobs, niter);
   
   for (int iter = 1; iter < niter; ++iter){
     
     
     if(smooth){
       // Sample
-      //std::cout << "going into funccov" << endl;
+      std::cout << "going into funccov" << endl;
       Rcpp::List funcCov_sample1 = sampleFuncCov(Xmat1_centered, X1vec, fpca_x1, F1mat, mu_x1, 
                                                  as_scalar(sigma_v(0, iter - 1)), 
                                                  eps.submat(0, iter - 1, npc - 1, iter - 1), 
-                                                 nobs, ntaus, a,  b,  i1,  i2);
+                                                 nX, ns, a,  b,  i1,  i2);
       
-     // std::cout << "going into funccov2" << endl;
+      std::cout << "going into funccov2" << endl;
       
       Rcpp::List funcCov_sample2 = sampleFuncCov(Xmat2_centered, X2vec, fpca_x2, F2mat, mu_x2, 
                                                  as_scalar(sigma_v(1, iter - 1)), 
                                                  eps.submat(npc, iter - 1, p*npc - 1, iter - 1), 
-                                                 nobs, ntaus, a,  b,  i1,  i2);    
+                                                 nX, ns, a,  b,  i1,  i2);    
       
       // Extract samples for first cov. and store
       arma::mat x1_sample = funcCov_sample1["Xsample"];
       x1_sims.col(iter) = x1_sample;
       arma::mat xi1_sample = funcCov_sample1["xi_sample"];
       
-      //std::cout << xi1_sample.n_rows << std::endl;
+      std::cout << xi1_sample.n_rows << std::endl;
       
-      xi.col(iter).rows(0, nobs*npc - 1)  = xi1_sample;
+      xi.col(iter).rows(0, nX*npc - 1)  = xi1_sample;
       
       arma::mat eps1_sample = funcCov_sample1["eps_sample"];
       eps.col(iter).rows(0, npc - 1) = eps1_sample;
-      //std::cout << eps1_sample.n_rows << std::endl;
+      std::cout << eps1_sample.n_rows << std::endl;
       
       sigma_v(0,iter) = funcCov_sample1["sigma_v_sample"];
       
@@ -1651,7 +1654,7 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
       x2_sims.col(iter) = x2_sample;
       
       arma::mat xi2_sample = funcCov_sample2["xi_sample"];
-      xi.col(iter).rows(nobs*npc, p*nobs*npc - 1)  = xi2_sample;
+      xi.col(iter).rows(nX*npc, p*nX*npc - 1)  = xi2_sample;
       
       arma::mat eps2_sample = funcCov_sample2["eps_sample"];
       eps.col(iter).rows(npc, p*npc - 1) = eps2_sample;
@@ -1676,7 +1679,7 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
     sigs = join_vert(ones(K1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
                      ones(dr1, 1)*(1/as_scalar(sigma_b1.col(iter -1))), 
                      ones(dr1, 1)*(1/as_scalar(sigma_b2.col(iter -1))));
-    ////std::cout << "Sampling alphas ... " << std::endl;
+    std::cout << "Sampling alphas ... " << std::endl;
     ////std::cout << "omegaf ... " << std::endl;
 
     Omegaf = repmat(sigs,1, Dalpha.n_cols)%Dalpha;
@@ -1690,6 +1693,8 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
     //std::cout << SigmaAlph.eigenvalues() <<std::endl;
     muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
     alpha_sample = sampleMVN(muAlpha, SigmaAlph);
+    Yfit_sample.col(iter) = Rmat*alpha_sample;
+    
     //std::cout << alpha_sample << std::endl;
     // Generate the sigmas
     ////std::cout << "Sampling sigma  ... " << std::endl;
@@ -1697,6 +1702,7 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
     shape_e = ntaus*nobs/2 + i1;
     
     ////std::cout << "rate e ... " << std::endl;
+    
     rate_e = i2 + 0.5*as_scalar((Yvec - (Rmat*alpha_sample)).t()*(Yvec - (Rmat*alpha_sample)));
     sigma_e_sample = 1/arma::randg<double>( distr_param(shape_e,1/rate_e));
     //(Rcpp::rgamma(1, shape_e, 1/rate_e));
@@ -1745,7 +1751,8 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
                             Rcpp::Named("eps") = eps,
                             Rcpp::Named("Rmat") = Rmat_check,
                             Rcpp::Named("x1") = x1_sims, 
-                            Rcpp::Named("x2") = x2_sims);
+                            Rcpp::Named("x2") = x2_sims,
+                            Rcpp::Named("Yfit") = Yfit_sample);
 }
 
 

@@ -77,11 +77,13 @@ create.lag.matrix <- function(delta, taus, S, ntaus){
   ind <- expand.grid(taus , S)
   indd <- rep(1, ntaus*ntaus)
   ub <- sapply(ind$Var1, function(x){max(x - delta, 0)})
-  indd[which(ind$Var2>=ind$Var1 |ind$Var2 <= (ind$Var1-delta) )] <-0 # removed delta from here.
+  indd[which(ind$Var2>=ind$Var1 |ind$Var2 < (ind$Var1-delta) )] <-0 # removed delta from here.
   ind <- cbind(ind, ub, indd)
   indmat <- matrix(indd, nrow= ntaus, ncol = ntaus, byrow=TRUE)
+ 
+  if (delta!=4){ indmat[,which(taus<=delta)] <- 0}
   # indmat[,taus <= delta] <- 0
-  indmat[1,1] <- 1
+  indmat[1,1] = ifelse(is.null(delta), 1, 0)
   
   return(indmat)
 }
@@ -90,9 +92,9 @@ create.lag.matrix <- function(delta, taus, S, ntaus){
 
 
 bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss, 
-                  interceptInfo = list("Fk1"="ts","K1"=10),
-                  tensorInfo = list("Fk" = "bs","Psi" = "bs","U" = 10,"K" = 10),
-                  PhiInfo = list("Phi"="bs","U"=10),
+                  interceptInfo = list(Fk1="ts",K1=10),
+                  tensorInfo = list(Fk = "bs",Psi = " bs" ,U = 10,K = 10),
+                  PhiInfo = list(Phi="bs",U=10),
                   lag = NULL, niter = 1000, nburn = 0.5,
                  #mcmc_params = list("alpha", "sigmae", "sigmab", "sigmamu", 
                 #                     "c", "sigmac", "sigmav","delta"),
@@ -111,22 +113,18 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   # Set up functional regression
   #-------------------------------------
   
-  K = tensorInfo$K
-  U = tensorInfo$U
+
   K1 = interceptInfo$K1
   ntaus = ncol(Ymat)
   nobs = nrow(Ymat)
   
   # 1. Set up basis functions
   
-  tensor_basis <- smoothCon(te(Ss,taus,bs=c(tensorInfo$Fk,tensorInfo$Psi),
-                               m=c(2,2),k=c(tensorInfo$K, tensorInfo$U)),
-                            data.frame(taus, Ss),
-                          scale.penalty = TRUE)[[1]]
+  tensor_basis <- smoothCon(te(taus,Ss,bs=c("bs", "bs"),m=c(2,2),k=K),data.frame(taus, Ss),
+                            scale.penalty = TRUE)[[1]]
   
-  intercept_basis<-  smoothCon(s(taus,bs=interceptInfo$Fk1, fx = FALSE,
-                                k = interceptInfo$K1), data.frame(taus),
-                              scale.penalty = FALSE)[[1]]
+  intercept_basis<-  smoothCon(s(taus,bs=interceptInfo$Fk1,
+                                k = interceptInfo$K1, m = c(2,1)), data.frame(taus))[[1]]
   
   #phi_basis <- smoothCon(s(taus,bs=PhiInfo$Phi, m = 2, k =  PhiInfo$U),data.frame(taus),
   #                     scale.penalty = TRUE)[[1]] 
@@ -135,18 +133,24 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
   # 2. Extract matrix of basis functions
   
-  Fk1 <- intercept_basis$X;
+  Fk1 <- cbind(1,intercept_basis$X)
   Fk <- tensor_basis$margin[[1]]$X
   Psi <- tensor_basis$margin[[2]]$X  
-  
+  K1 = ncol(Fk1)
+  K = ncol(Fk)
+  U = ncol(Psi)
   # 3. Extract penalty matrices
   
-  Dmu <- intercept_basis$S[[1]]
+  Dmu <- matrix(0, K1, K1)
+  Dmu[1,1] <- 0.0000001
+  Dmu[-1,-1] <- intercept_basis$S[[1]]
+  #diag(Dmu[1:3,1:3]) <- 1e-5
+  #Dmu <- intercept_basis$S[[1]]
   Db <-  tensor_basis$S[[1]]+tensor_basis$S[[2]]
   
   # 4. Diagonalise Db if diag == TRUE 
   
-  Db.d <- diag(1, tensorInfo$K*tensorInfo$U,  tensorInfo$K*tensorInfo$U)
+  Db.d <- diag(1, dim(Db)[2],  dim(Db)[2])
   svd_Db <- svd(Db)
   Zmat.inv <- svd_Db$u%*%diag(svd_Db$d^-0.5)
   
@@ -193,6 +197,7 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
   taus_fit = taus[taus>=DEL]
   
+
   if(prior == "HS"){
     print(paste0("Fitting a Bayes HFLM model with a ", prior , " prior, delta = ", lag,
                  ", smooth the predictor = ", smooth, "."))
@@ -201,8 +206,8 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
     mcmc_results = mcmc_sampler7(c(t(Ymat_fit)), Ymat,
                                  c(t(Xmat1)),c(t(Xmat2)),
                                  Xmat1_centered, Xmat2_centered, 
-                                 taus, Ss,
-                                 Fk_fit, Fk1, Psi,
+                                 taus_fit, Ss,
+                                 Fk_fit, Fk1_fit, Psi,
                                  as.matrix(fpca_x1$efunctions),as.matrix(fpca_x2$efunctions),
                                  mu1_mat, mu2_mat, U,  
                                  matrix(c(fpca_x1$evalues,fpca_x2$evalues), ncol = 1),
@@ -222,8 +227,8 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
     mcmc_results = mcmc_sampler6(c(t(Ymat_fit)), Ymat_fit,
                                  c(t(Xmat1)), c(t(Xmat2)), 
                                  Xmat1_centered, Xmat2_centered,
-                                 taus, Ss,
-                                 Fk_fit, Fk1, Psi,
+                                 taus_fit, Ss,
+                                 Fk_fit, Fk1_fit, Psi,
                                  as.matrix(fpca_x1$efunctions),as.matrix(fpca_x2$efunctions),
                                  mu1_mat, mu2_mat, U,  
                                  matrix(c(fpca_x1$evalues,fpca_x2$evalues), ncol = 1),
@@ -241,7 +246,8 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   # 7. Process results
   
   # Create the indicator matrix
-  ind_mat <- create.lag.matrix(4, taus, Ss, ntaus)
+  val = ifelse(is.null(lag), 4, lag)
+  ind_mat <- create.lag.matrix(val, taus, Ss, ntaus)
   
   
   
