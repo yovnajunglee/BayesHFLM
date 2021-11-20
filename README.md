@@ -1,4 +1,3 @@
 # BayesHFLM
- R package for Bayesian Historical Functional Linear Models
+ R package for Bayesian Historical Functional Linear Models (under development)
  
- - Yovna Junglee
