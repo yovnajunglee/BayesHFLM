@@ -77,13 +77,13 @@ create.lag.matrix <- function(delta, taus, S, ntaus){
   ind <- expand.grid(taus , S)
   indd <- rep(1, ntaus*ntaus)
   ub <- sapply(ind$Var1, function(x){max(x - delta, 0)})
-  indd[which(ind$Var2>=ind$Var1 |ind$Var2 < (ind$Var1-delta) )] <-0 # removed delta from here.
+  indd[which(ind$Var2>ind$Var1 |ind$Var2 < (ind$Var1-delta) )] <-0 # removed delta from here.
   ind <- cbind(ind, ub, indd)
   indmat <- matrix(indd, nrow= ntaus, ncol = ntaus, byrow=TRUE)
  
   if (delta!=4){ indmat[,which(taus<=delta)] <- 0}
   # indmat[,taus <= delta] <- 0
-  indmat[1,1] = ifelse(is.null(delta), 1, 0)
+  indmat[1,1] = ifelse(delta == 4, 1, 0)
   
   return(indmat)
 }
@@ -92,8 +92,8 @@ create.lag.matrix <- function(delta, taus, S, ntaus){
 
 
 bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss, 
-                  interceptInfo = list(Fk1="ts",K1=10),
-                  tensorInfo = list(Fk = "bs",Psi = " bs" ,U = 10,K = 10),
+                  interceptInfo = list(Fk1="bs",K1=10),
+                  tensorInfo = list(Fk = "bs",Psi = "bs" ,U = 10,K = 10),
                   PhiInfo = list(Phi="bs",U=10),
                   lag = NULL, niter = 1000, nburn = 0.5,
                  #mcmc_params = list("alpha", "sigmae", "sigmab", "sigmamu", 
@@ -120,7 +120,7 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
   # 1. Set up basis functions
   
-  tensor_basis <- smoothCon(te(taus,Ss,bs=c("bs", "bs"),m=c(2,2),k=K),data.frame(taus, Ss),
+  tensor_basis <- smoothCon(te(taus,Ss,bs=c(tensorInfo$Fk, tensorInfo$Psi),m=c(2,2),k=tensorInfo$K),data.frame(taus, Ss),
                             scale.penalty = TRUE)[[1]]
   
   intercept_basis<-  smoothCon(s(taus,bs=interceptInfo$Fk1,
@@ -133,7 +133,7 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
   # 2. Extract matrix of basis functions
   
-  Fk1 <- cbind(1,intercept_basis$X)
+  Fk1 <- cbind( intercept_basis$X)
   Fk <- tensor_basis$margin[[1]]$X
   Psi <- tensor_basis$margin[[2]]$X  
   K1 = ncol(Fk1)
@@ -142,10 +142,17 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   # 3. Extract penalty matrices
   
   Dmu <- matrix(0, K1, K1)
-  Dmu[1,1] <- 0.0000001
-  Dmu[-1,-1] <- intercept_basis$S[[1]]
+  #diag(Dmu) <- 1
+  #Dmu[1,1] <- 0.0000001
+  #Dmu[-1,-1] <- intercept_basis$S[[1]]
   #diag(Dmu[1:3,1:3]) <- 1e-5
-  #Dmu <- intercept_basis$S[[1]]
+  Dmu <- intercept_basis$S[[1]]
+  
+  Dmu.d <- diag(1, K1,  K1)
+  svd_Dmu <- svd(Dmu)
+  Zmu <- svd_Dmu$u%*%diag(svd_Dmu$d^-0.5)
+  Zmu <- Dmu.d
+  
   Db <-  tensor_basis$S[[1]]+tensor_basis$S[[2]]
   
   # 4. Diagonalise Db if diag == TRUE 
@@ -153,7 +160,7 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   Db.d <- diag(1, dim(Db)[2],  dim(Db)[2])
   svd_Db <- svd(Db)
   Zmat.inv <- svd_Db$u%*%diag(svd_Db$d^-0.5)
-  
+  #Zmat.inv <- Db.d
   Dalpha <- matrix(0,  K1 + 2*U*K, K1 + 2*U*K)
   Dalpha[1:K1,1:K1] <- Dmu
   Dalpha[(K1+1):(K1+U*K),(K1+1):(K1+U*K)] <- diagonalise*Db.d + (1-diagonalise)*Zmat.inv
@@ -161,17 +168,19 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
   # 5. Set up functional principal components (used if SMOOTH == TRUE)
   
+  
   # First predictor
   
-  fpca_x1 <- refund::fpca.face(Y = Xmat1, center = T , argvals = taus,
+  fpca_x1 <- refund::fpca.face(Y = Xmat1, center = F , argvals = taus,
                                knots = 12, npc = U)
+  
   Xmat1_centered = as.matrix(t(apply(Xmat1, 1, function(x) {x - fpca_x1$mu})))
   mu1_mat <- as.matrix(rep(as.matrix(fpca_x1$mu),nobs))
   
   
   # Second predictor
   
-  fpca_x2 <- refund::fpca.face(Y = Xmat2, center = T , argvals = taus,
+  fpca_x2 <- refund::fpca.face(Y = Xmat2, center = F , argvals = taus,
                                knots = 12, npc = U)
   Xmat2_centered = as.matrix(t(apply(Xmat2, 1, function(x) {x - fpca_x2$mu})))
   mu2_mat <- as.matrix(rep(as.matrix(fpca_x2$mu),nobs))
@@ -197,7 +206,6 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
   taus_fit = taus[taus>=DEL]
   
-
   if(prior == "HS"){
     print(paste0("Fitting a Bayes HFLM model with a ", prior , " prior, delta = ", lag,
                  ", smooth the predictor = ", smooth, "."))
@@ -212,8 +220,8 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
                                  mu1_mat, mu2_mat, U,  
                                  matrix(c(fpca_x1$evalues,fpca_x2$evalues), ncol = 1),
                                  eps_start, 
-                                 Dmu, Db.d,
-                                 Dalpha, Zmat.inv, 
+                                 diag(1, ncol =  K1, nrow = K1), Db.d,
+                                 diag(1, ncol =  K1 + 2*U*K, nrow = K1 + U*K), diag(1, ncol =  2*U*K, nrow = U*K), 
                                  mcmc_hyper$i1, mcmc_hyper$i2,
                                  mcmc_hyper$a,mcmc_hyper$b,
                                  mcmc_hyper$A, mcmc_hyper$B, mcmc_hyper$C,
@@ -233,7 +241,7 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
                                  mu1_mat, mu2_mat, U,  
                                  matrix(c(fpca_x1$evalues,fpca_x2$evalues), ncol = 1),
                                  eps_start, 
-                                 Dmu, Db.d, Dalpha, Zmat.inv, 
+                                 Dmu, Db.d, Dalpha, Zmat.inv, Zmu,
                                  mcmc_hyper$i1, mcmc_hyper$i2, 
                                  mcmc_hyper$a,mcmc_hyper$b,
                                  lag, niter, smooth)
@@ -262,9 +270,28 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
   beta_hat  = list(beta1 = beta1.gibbs, beta2 = beta2.gibbs)
   
+  # -- 7b. Posteriors of betas and mus
+  FF1 <- kronecker(rep(1,nobs), Fk1_fit%*%Zmu)
+  
+  
+  post_mu = apply(mcmc_results$alpha, 2, function(x){
+    return(FF1%*%x[1:K1])
+  })
+  
+  post_beta1 = apply(mcmc_results$alpha, 2, function(x) {
+    bhat  = reconstruct.surface(x, Fk, K, Psi, U, K1 + 1, K1 + U*K, ntaus, Zmat.inv)
+    return(c(bhat*ind_mat))
+    } 
+    )
+  
+  post_beta2 = apply(mcmc_results$alpha, 2, function(x) {
+    bhat  = reconstruct.surface(x, Fk, K, Psi, U,  K1 + U*K + 1, K1 + 2*U*K, ntaus, Zmat.inv)
+    return(c(bhat*ind_mat))
+  } 
+  )
+  
   # -- 7b. Estimated fitted values
   
-  FF1 <- kronecker(rep(1,nobs), Fk1_fit)
   
   Yfit <- (Xmat1%*%(beta1.gibbs*(taus[16]-taus[15]))+
              Xmat2%*%(beta2.gibbs*(taus[16]-taus[15])))[,taus>=DEL]+
@@ -278,7 +305,10 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
                beta_hat = beta_hat, 
                Yfit = Yfit, 
                DEL = DEL, 
-               mu_hat = mu_hat))
+               mu_hat = mu_hat,
+               post_mu = post_mu,
+               post_beta1 = post_beta1,
+               post_beta2 = post_beta2))
   
 }
 
@@ -290,5 +320,6 @@ predict_hflm  = function(hflm_mcmc, X1_new, X2_new, taus, DEL){
   
   return(preds)
 }
+
 
 

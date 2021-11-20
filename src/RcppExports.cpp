@@ -62,6 +62,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sampleFastMVN
+arma::mat sampleFastMVN(arma::mat Phi, arma::mat Dmat, arma::mat alpha);
+RcppExport SEXP _BayesHFLM_sampleFastMVN(SEXP PhiSEXP, SEXP DmatSEXP, SEXP alphaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Phi(PhiSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Dmat(DmatSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type alpha(alphaSEXP);
+    rcpp_result_gen = Rcpp::wrap(sampleFastMVN(Phi, Dmat, alpha));
+    return rcpp_result_gen;
+END_RCPP
+}
 // data_matrix
 arma::mat data_matrix(arma::mat mymat, int nc, int nr);
 RcppExport SEXP _BayesHFLM_data_matrix(SEXP mymatSEXP, SEXP ncSEXP, SEXP nrSEXP) {
@@ -387,8 +400,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // mcmc_sampler6
-Rcpp::List mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat, arma::colvec X1vec, arma::colvec X2vec, arma::mat Xmat1_centered, arma::mat Xmat2_centered, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat fpca_x1, arma::mat fpca_x2, arma::mat mu_x1, arma::mat mu_x2, int npc, arma::mat eigs, arma::mat eps_start, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Zmat, double i1, double i2, double a, double b, Rcpp::Nullable<Rcpp::NumericVector> lag, int niter, bool smooth);
-RcppExport SEXP _BayesHFLM_mcmc_sampler6(SEXP YvecSEXP, SEXP YmatSEXP, SEXP X1vecSEXP, SEXP X2vecSEXP, SEXP Xmat1_centeredSEXP, SEXP Xmat2_centeredSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP fpca_x1SEXP, SEXP fpca_x2SEXP, SEXP mu_x1SEXP, SEXP mu_x2SEXP, SEXP npcSEXP, SEXP eigsSEXP, SEXP eps_startSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP ZmatSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP lagSEXP, SEXP niterSEXP, SEXP smoothSEXP) {
+Rcpp::List mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat, arma::colvec X1vec, arma::colvec X2vec, arma::mat Xmat1_centered, arma::mat Xmat2_centered, arma::colvec taus, arma::colvec Ss, arma::mat Fk, arma::mat Fk1, arma::mat Psi, arma::mat fpca_x1, arma::mat fpca_x2, arma::mat mu_x1, arma::mat mu_x2, int npc, arma::mat eigs, arma::mat eps_start, arma::mat Dmu, arma::mat Db, arma::mat Dalpha, arma::mat Zmat, arma::mat Zmu, double i1, double i2, double a, double b, Rcpp::Nullable<Rcpp::NumericVector> lag, int niter, bool smooth);
+RcppExport SEXP _BayesHFLM_mcmc_sampler6(SEXP YvecSEXP, SEXP YmatSEXP, SEXP X1vecSEXP, SEXP X2vecSEXP, SEXP Xmat1_centeredSEXP, SEXP Xmat2_centeredSEXP, SEXP tausSEXP, SEXP SsSEXP, SEXP FkSEXP, SEXP Fk1SEXP, SEXP PsiSEXP, SEXP fpca_x1SEXP, SEXP fpca_x2SEXP, SEXP mu_x1SEXP, SEXP mu_x2SEXP, SEXP npcSEXP, SEXP eigsSEXP, SEXP eps_startSEXP, SEXP DmuSEXP, SEXP DbSEXP, SEXP DalphaSEXP, SEXP ZmatSEXP, SEXP ZmuSEXP, SEXP i1SEXP, SEXP i2SEXP, SEXP aSEXP, SEXP bSEXP, SEXP lagSEXP, SEXP niterSEXP, SEXP smoothSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -414,6 +427,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type Db(DbSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Dalpha(DalphaSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Zmat(ZmatSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Zmu(ZmuSEXP);
     Rcpp::traits::input_parameter< double >::type i1(i1SEXP);
     Rcpp::traits::input_parameter< double >::type i2(i2SEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
@@ -421,7 +435,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type lag(lagSEXP);
     Rcpp::traits::input_parameter< int >::type niter(niterSEXP);
     Rcpp::traits::input_parameter< bool >::type smooth(smoothSEXP);
-    rcpp_result_gen = Rcpp::wrap(mcmc_sampler6(Yvec, Ymat, X1vec, X2vec, Xmat1_centered, Xmat2_centered, taus, Ss, Fk, Fk1, Psi, fpca_x1, fpca_x2, mu_x1, mu_x2, npc, eigs, eps_start, Dmu, Db, Dalpha, Zmat, i1, i2, a, b, lag, niter, smooth));
+    rcpp_result_gen = Rcpp::wrap(mcmc_sampler6(Yvec, Ymat, X1vec, X2vec, Xmat1_centered, Xmat2_centered, taus, Ss, Fk, Fk1, Psi, fpca_x1, fpca_x2, mu_x1, mu_x2, npc, eigs, eps_start, Dmu, Db, Dalpha, Zmat, Zmu, i1, i2, a, b, lag, niter, smooth));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -506,6 +520,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// check_kron
+arma::mat check_kron(arma::mat A);
+RcppExport SEXP _BayesHFLM_check_kron(SEXP ASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
+    rcpp_result_gen = Rcpp::wrap(check_kron(A));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_rcpparma_outerproduct", (DL_FUNC) &_BayesHFLM_rcpparma_outerproduct, 1},
@@ -513,6 +538,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_rcpparma_bothproducts", (DL_FUNC) &_BayesHFLM_rcpparma_bothproducts, 1},
     {"_BayesHFLM_myfirstfunc", (DL_FUNC) &_BayesHFLM_myfirstfunc, 0},
     {"_BayesHFLM_sampleMVN", (DL_FUNC) &_BayesHFLM_sampleMVN, 2},
+    {"_BayesHFLM_sampleFastMVN", (DL_FUNC) &_BayesHFLM_sampleFastMVN, 3},
     {"_BayesHFLM_data_matrix", (DL_FUNC) &_BayesHFLM_data_matrix, 3},
     {"_BayesHFLM_is_null", (DL_FUNC) &_BayesHFLM_is_null, 1},
     {"_BayesHFLM_isLag", (DL_FUNC) &_BayesHFLM_isLag, 1},
@@ -529,10 +555,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesHFLM_make_mat", (DL_FUNC) &_BayesHFLM_make_mat, 3},
     {"_BayesHFLM_sum_mat", (DL_FUNC) &_BayesHFLM_sum_mat, 2},
     {"_BayesHFLM_sampleFuncCov", (DL_FUNC) &_BayesHFLM_sampleFuncCov, 13},
-    {"_BayesHFLM_mcmc_sampler6", (DL_FUNC) &_BayesHFLM_mcmc_sampler6, 29},
+    {"_BayesHFLM_mcmc_sampler6", (DL_FUNC) &_BayesHFLM_mcmc_sampler6, 30},
     {"_BayesHFLM_sampleRegCoeff", (DL_FUNC) &_BayesHFLM_sampleRegCoeff, 18},
     {"_BayesHFLM_mcmc_sampler7", (DL_FUNC) &_BayesHFLM_mcmc_sampler7, 32},
     {"_BayesHFLM_silly_mistake", (DL_FUNC) &_BayesHFLM_silly_mistake, 1},
+    {"_BayesHFLM_check_kron", (DL_FUNC) &_BayesHFLM_check_kron, 1},
     {NULL, NULL, 0}
 };
 

@@ -76,6 +76,39 @@ arma::mat sampleMVN(arma::vec ell, arma::mat Qc) {
     return vals;
 }
 
+// Sample from a MVN posterior distribution
+// for large p by Bhattacharya et al. [assuming D is diag of 1]
+// [[Rcpp::export]]
+arma::mat sampleFastMVN(arma::mat Phi, arma::mat Dmat, arma::mat alpha) {
+  // Obtain dimensions
+  int p = Phi.n_cols;
+  int n = Phi.n_rows;
+  
+  // Sample using algorithm 
+  
+  // Step 1
+  arma::mat u = arma::randn(p)/sqrt(Dmat.diag());
+  arma::mat delta = arma::randn(n);
+  
+  // Step 2: Set v = phi*u + delta
+  arma::mat v = Phi*u + delta;
+  
+  // Step 3: Solve system of linear equations
+  
+  arma::mat w = solve(Phi*Dmat*Phi.t() + arma::eye(n, n), alpha - v );
+    
+ //   solve(crossprod(sqrt(Ddiag)*t(Phi)) + diag(n), #Phi%*%diag(Ddiag)%*%t(Phi) + diag(n)
+    //          alpha - v)
+    
+
+  // Step 4: Set theta = u + DPhiTw
+  arma::mat theta = u + Dmat*Phi.t()*w;
+  
+  return (theta) ;
+    
+}
+
+
 // Make matrix N x T out of a vector NT X 1
 // [[Rcpp::export]]
 arma::mat data_matrix(arma::mat mymat, int nc, int nr){
@@ -164,7 +197,7 @@ arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
                    // std::cout << s << std::endl;
                       double psival = Psi(s, u);
                       double sval = Ss(s);
-                          if (sval < (tauval) & sval >= (tauval-lower_bound)){
+                          if (sval <= (tauval) & sval >= (tauval-lower_bound)){
                               intval = intval + Xmat(i,s)*psival*(taus(1)-taus(0));
                           }
 
@@ -201,7 +234,7 @@ arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
    //arma::mat tau2 = tau_mat%tau_mat;
    //arma::mat tau3 = tau2%tau_mat;
 
-   arma::mat Rmat  = XX*Zmat ; //arma::join_horiz(FF1, XX); // arma::join_horiz(arma::ones(totals,1), FF1, XX); 
+  arma::mat Rmat  = XX*Zmat ; //arma::join_horiz(FF1, XX); // arma::join_horiz(arma::ones(totals,1), FF1, XX); 
    //arma::join_horiz(FF1, XX);
     //
    //Rmat = arma::join_horiz(Rmat,FF1, XX);
@@ -1519,7 +1552,7 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
                          int npc,
                          arma::mat eigs, arma::mat eps_start,
                          arma::mat Dmu, arma::mat Db, arma::mat Dalpha,
-                         arma::mat Zmat,
+                         arma::mat Zmat, arma::mat Zmu,
                          double i1, double i2, double a, double b, 
                          Rcpp::Nullable<Rcpp::NumericVector> lag, int niter, bool smooth){
   
@@ -1541,7 +1574,7 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
   //arma::mat Rmat1 = constructTPRS(X1vec, taus, Ss,  nobs, knots, Zmat, delta); 
   arma::mat Rmat2 =constructMatrix(X2vec, taus, Ss, Fk, Fk1, Psi,  nobs, delta, Zmat); 
   //arma::mat Rmat2 = constructTPRS(X2vec, taus, Ss, nobs, knots, Zmat, delta); 
-  arma::mat FF1  = repmat(Fk1, nobs, 1);
+  arma::mat FF1  = repmat(Fk1*Zmu, nobs, 1);
   arma::mat Rmat = arma::join_horiz(FF1, Rmat1, Rmat2);
   
   int dr1 = Rmat1.n_cols; 
@@ -1614,19 +1647,21 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
   arma::mat x2_sims(ns*nX, niter);
   
   arma::mat Yfit_sample(ntaus*nobs, niter);
+  arma::mat RtR = Rmat.t()*Rmat;
+  arma::mat RtY = Rmat.t()*Yvec; 
   
   for (int iter = 1; iter < niter; ++iter){
     
     
     if(smooth){
       // Sample
-      std::cout << "going into funccov" << endl;
+      //std::cout << "going into funccov" << endl;
       Rcpp::List funcCov_sample1 = sampleFuncCov(Xmat1_centered, X1vec, fpca_x1, F1mat, mu_x1, 
                                                  as_scalar(sigma_v(0, iter - 1)), 
                                                  eps.submat(0, iter - 1, npc - 1, iter - 1), 
                                                  nX, ns, a,  b,  i1,  i2);
       
-      std::cout << "going into funccov2" << endl;
+      //std::cout << "going into funccov2" << endl;
       
       Rcpp::List funcCov_sample2 = sampleFuncCov(Xmat2_centered, X2vec, fpca_x2, F2mat, mu_x2, 
                                                  as_scalar(sigma_v(1, iter - 1)), 
@@ -1638,13 +1673,13 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
       x1_sims.col(iter) = x1_sample;
       arma::mat xi1_sample = funcCov_sample1["xi_sample"];
       
-      std::cout << xi1_sample.n_rows << std::endl;
+      //std::cout << xi1_sample.n_rows << std::endl;
       
       xi.col(iter).rows(0, nX*npc - 1)  = xi1_sample;
       
       arma::mat eps1_sample = funcCov_sample1["eps_sample"];
       eps.col(iter).rows(0, npc - 1) = eps1_sample;
-      std::cout << eps1_sample.n_rows << std::endl;
+      //std::cout << eps1_sample.n_rows << std::endl;
       
       sigma_v(0,iter) = funcCov_sample1["sigma_v_sample"];
       
@@ -1668,7 +1703,8 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
       //std::cout << x1_sample(0,0) << std::endl;
       //std::cout<<constructMatrix(x1_sample, taus, Ss, Fk, Fk1, Psi,nobs, delta, Zmat).col(0).row(0) << std::endl;
       //std::cout << x2_sample(0,0) << std::endl;
-      
+      RtR  = Rmat.t()*Rmat; 
+      RtY = Rmat.t()*Yvec;
       Rmat_check.col(iter) = reshape(Rmat, Rmat.n_cols, 1);
     }
     
@@ -1676,23 +1712,34 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
     //std::cout << Rmat(0,10) << std::endl;
     
     // Create vector sigmas
+    //std::cout << "sigs... " << std::endl;
+    
     sigs = join_vert(ones(K1, 1)*(1/as_scalar(sigma_mu.col(iter - 1))),
                      ones(dr1, 1)*(1/as_scalar(sigma_b1.col(iter -1))), 
                      ones(dr1, 1)*(1/as_scalar(sigma_b2.col(iter -1))));
-    std::cout << "Sampling alphas ... " << std::endl;
-    ////std::cout << "omegaf ... " << std::endl;
-
-    Omegaf = repmat(sigs,1, Dalpha.n_cols)%Dalpha;
-    //std::cout << " sigmaalphas ... " << std::endl;
+    //std::cout << "Sampling alphas ... " << std::endl;
+    //std::cout << "omegaf ... " << std::endl;
+    std::cout << Omegaf.n_cols << std::endl;
+    std::cout << dr1 << std::endl;
+    std::cout << Dalpha.n_cols << std::endl;
     
-    SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat); //+ 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
-    //std::cout << "mu  alphas ... " << std::endl;
+    Omegaf = repmat(sigs,1, Dalpha.n_cols)%Dalpha;
+    std::cout << " sigmaalphas ... " << std::endl;
+    
+    SigmaAlph = Omegaf + ((1/(as_scalar(sigma_e.col(iter - 1))))*RtR); //+ 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
+    std::cout << "mu  alphas ... " << std::endl;
     //std::cout << Omegaf << std::endl;
     //std::cout << Dalpha.is_symmetric() << std::endl;
     //std::cout << ((1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Rmat).is_symmetric() << std::endl;
     //std::cout << SigmaAlph.eigenvalues() <<std::endl;
-    muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*Rmat.t()*Yvec;
+    muAlpha = (1/(as_scalar(sigma_e.col(iter - 1))))*RtY;
+    //std::cout << "sampling  alphas ... " << std::endl;
+    
     alpha_sample = sampleMVN(muAlpha, SigmaAlph);
+    //std::cout << "done sampling  alphas ... " << std::endl;
+    
+    //alpha_sample = sampleFastMVN(Rmat, Omegaf, Yvec);
+    
     Yfit_sample.col(iter) = Rmat*alpha_sample;
     
     //std::cout << alpha_sample << std::endl;
@@ -1767,6 +1814,8 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
   
   int dr =  Dmu.n_cols + p*dr1;
   int K1  = Dmu.n_cols;
+
+
   
   arma::mat SigmaAlph(dr, dr);
   arma::mat muAlpha(dr, 1);
@@ -1787,13 +1836,36 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
   // double curr_sigma_e = curr_parms["sigma_e"];
   // double curr_sigma_mu = curr_parms["sigma_mu"];
   // 
-  arma::mat Dmat_inv = diagmat(join_vert(ones(dr1, 1)*(1/as_scalar(curr_lambda(0,0))), 
-                           ones(dr1, 1)*(1/as_scalar(curr_lambda(1,0)))))%diagmat(1/curr_delta_guk);
   
+  //std::cout <<"first" << std::endl;
+  arma::mat Dmat_inv(K1 + p*dr1, K1 + p*dr1, fill::zeros);
+  //arma::mat Dmat1_inv(K1 + p*dr1, K1 + p*dr1, fill::zeros);
+  
+  //Dmat_inv.submat(0, 0, K1 - 1, K1 - 1 ) = diagmat(1/as_scalar(curr_lambda(0,0))*ones(K1));
+ // std::cout <<"sec" << std::endl;
+  //std::cout << p*dr1 << std::endl;
+  //std::cout << dr << std::endl;
+  
+  //std::cout << Dmat_inv.submat(K1, K1, dr - 1, dr - 1 ).n_cols << std::endl;
+  //std::cout << Dmat_inv.submat(K1, K1, dr - 1, dr - 1 ).n_rows << std::endl;
+  
+  //arma::mat Bmat = diagmat(kron(1/curr_lambda.rows(1, p), ones(p*dr1)));
+  //std::cout <<  Bmat.n_cols << std::endl;
+  //std::cout <<   Bmat.n_rows << std::endl;
+  //Dmat_inv.submat(K1, K1, dr - 1, dr - 1 ) = diagmat(kron(1/curr_lambda.rows(1, p), ones(dr1)));
+  //Dmat1_inv = Dmat_inv%diagmat(1/curr_delta_guk);
+    //diagmat(join_vert(ones(K1, 1)*(1/as_scalar(curr_lambda(0,0)),join_vert(ones(dr1, 1)*(1/as_scalar(curr_lambda(1,0))), 
+    //                       ones(dr1, 1)*(1/as_scalar(curr_lambda(2,0))))))%diagmat(1/curr_delta_guk);
+  
+
   // Initialise parameters
-  arma::mat prior_cov(K1 + p*dr1, K1 + p*dr1, fill::zeros);
-  prior_cov.submat(0, 0, Dmu.n_cols - 1, Dmu.n_cols - 1 ) =  (1/curr_sigma_mu)*Dmu;
-  prior_cov.submat(Dmu.n_cols,Dmu.n_cols , dr - 1, dr - 1 ) = (1/curr_tau)*Dmat_inv;
+  //std::cout <<"s3rd" << std::endl;
+  Dmat_inv = diagmat(1/curr_lambda);
+  
+  arma::mat prior_precision(K1 + p*dr1, K1 + p*dr1, fill::zeros);
+  prior_precision = (1/curr_tau)*Dmat_inv;
+  //prior_precision.submat(0, 0, Dmu.n_cols - 1, Dmu.n_cols - 1 ) =  (1/curr_sigma_mu)*Dmu;
+  //prior_precision.submat(Dmu.n_cols,Dmu.n_cols , dr - 1, dr - 1 ) = (1/curr_tau)*Dmat_inv;
   //must global parameters + predictor param + within pred param 
   
   // ==========================================================
@@ -1801,15 +1873,17 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
   // ==========================================================
   
   std::cout << curr_tau << endl;
+  std::cout << curr_lambda << endl;
+  
   // std::cout << Dmat_inv.diag()<< endl;
-  SigmaAlph = prior_cov + (1/(curr_sigma_e)*Rmat.t()*Rmat) ; //+ 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
+  SigmaAlph = prior_precision + (1/(curr_sigma_e)*Rmat.t()*Rmat) ; //+ 0.0000001*arma::eye(Rmat.n_cols, Rmat.n_cols);
   
   std::cout << "mu  alphas ... " << std::endl;
   //std::cout << Omegaf << std::endl;
   std::cout << Dmu.is_symmetric() << std::endl;
   std::cout << Dmat_inv.is_symmetric() << std::endl;
   
-  std::cout << prior_cov.is_symmetric() << std::endl;
+  std::cout << prior_precision.is_symmetric() << std::endl;
   std::cout << ((1/(curr_sigma_e))*Rmat.t()*Rmat).is_symmetric() << std::endl;
   //std::cout << SigmaAlph.eigenvalues() <<std::endl;
   muAlpha = (1/(curr_sigma_e))*Rmat.t()*Yvec;
@@ -1820,42 +1894,47 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
   // Sample Horseshoe prior parameters
   // ==========================================================
   
-  // -------------------------------------
-  // Global scale parameter
-  // -------------------------------------
-  
-  // double myval = 0.009;
-  std::cout << "Sampling taus" << std::endl;
-  //std::cout << 0.5*as_scalar((alpha_sample.rows(K1, dr - 1).t()*Dmat_inv*alpha_sample.rows(K1, dr - 1))) +
-  //  (1/curr_a_tau) << std::endl;
-  double tau_rate  = 0.5*as_scalar((alpha_sample.rows(K1, dr - 1).t()*Dmat_inv*alpha_sample.rows(K1, dr - 1))) +
-    (1/curr_a_tau);
-  double tau_sample =  1/arma::randg<double>( distr_param(0.5*p*dr1 + 0.5,1/tau_rate));
-  double a_tau_sample = 1/arma::randg<double>( distr_param(1.000,1/((1/tau_sample)+(1/(pow(A,2))))));
-  std::cout << tau_sample << std::endl;
-  std::cout << a_tau_sample << std::endl;
+
   
   // -------------------------------------
   // Local predictor level shrinkage
   // -------------------------------------
+  
 
-  arma::mat lambda(p,1);
-  arma::mat p_g(p,1);
+  int k  = p + 1; 
+
+  arma::mat lambda(dr,1); // k
+  arma::mat p_g(dr,1); // k
   std::cout << "Sampling lambda" << std::endl;
   arma::mat curr_delta_g;
-  for(int g = 0; g < p ; ++g){
-    curr_delta_g = curr_delta_guk.rows(g*dr1, (g+1)*dr1 - 1);
+  
+  // Sample for mu
+  //double rate_lambdag = 0.5*as_scalar(alpha_sample.rows(0, K1 - 1).t()*diagmat(1/(curr_sigma_e*tau_sample*curr_delta_guk.rows(0, K1 - 1)))*
+                                    //  alpha_sample.rows(0, K1 - 1)) + (1/as_scalar(curr_p_g(0, 0)));
+  //std::cout << rate_lambdag << std::endl;
+  //std::cout << curr_p_g(0,0) << std::endl;
+  
+  //lambda(0,0) =  1/arma::randg<double>( distr_param(0.5*K1 + 0.5, 1/rate_lambdag));
+  //std::cout << lambda(0,0) << std::endl;
+  //p_g(0,0) = 1/arma::randg<double>( distr_param(1.00, 1/((1/lambda(0,0))+(1/pow(B,2)))));
+  
+  for(int g = 0; g < dr ; ++g){
+    //curr_delta_g = curr_delta_guk.rows(K1 + g*dr1, K1 + (g+1)*dr1 - 1);
     //std::cout << alpha_sample.rows(K1+ g*dr1 ,K1 + (g+1)*dr1 - 1).t()*diagmat(1/(tau_sample*curr_delta_g))*
      // alpha_sample.rows(K1+ g*dr1 ,K1 + (g+1)*dr1 - 1) << std::endl;
      
     // Evaluate the rate parameter for each lambda_g
     
-    double rate_lambdag = 0.5*as_scalar(alpha_sample.rows(K1+ g*dr1 ,K1 + (g+1)*dr1 - 1).t()*diagmat(1/(tau_sample*curr_delta_g))*
-      alpha_sample.rows(K1+ g*dr1 ,K1 + (g+1)*dr1 - 1)) + (1/as_scalar(curr_p_g(g, 0)));
+    double rate_lambdag = 0.5*as_scalar(alpha_sample.row(g))*(1/(curr_sigma_e*curr_tau))*
+      as_scalar(alpha_sample.row(g)) + (1/as_scalar(curr_p_g(g, 0))); // +1
+    
+     // 0.5*as_scalar(alpha_sample.rows(K1+ g*dr1 ,K1 + (g+1)*dr1 - 1).t()*diagmat(1/(curr_sigma_e*tau_sample*curr_delta_g))*
+      //alpha_sample.rows(K1+ g*dr1 ,K1 + (g+1)*dr1 - 1)) + (1/as_scalar(curr_p_g(g+1, 0)));
     
     // Sample lambda_g
     
-    lambda(g,0) =  1/arma::randg<double>( distr_param(0.5*dr1 + 0.5, 1/rate_lambdag));
+    // + 1
+    lambda(g,0) =  1/arma::randg<double>( distr_param(0.5*1 + 0.5, 1/rate_lambdag));
     
     // Sample p_g
     
@@ -1866,24 +1945,58 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
   }
   
   // -------------------------------------
+  // Global scale parameter
+  // -------------------------------------
+  Dmat_inv = diagmat(1/lambda);
+  
+  
+  // double myval = 0.009;
+  std::cout << "Sampling taus" << std::endl;
+  //std::cout << 0.5*as_scalar((alpha_sample.rows(K1, dr - 1).t()*Dmat_inv*alpha_sample.rows(K1, dr - 1))) +
+  //  (1/curr_a_tau) << std::endl;
+  double tau_rate  = 0.5*as_scalar((alpha_sample.t()*Dmat_inv*alpha_sample))/curr_sigma_e +
+    (1/curr_a_tau);
+  double tau_sample =  1/arma::randg<double>( distr_param(0.5*dr + 0.5,1/tau_rate));
+  double a_tau_sample = 1/arma::randg<double>( distr_param(1.000,1/((1/tau_sample)+(1/(pow(A,2))))));
+  std::cout << tau_sample << std::endl;
+  std::cout << a_tau_sample << std::endl;
+  
+  
+  
+  // -------------------------------------
   // Within predictor level shrinkage
   // -------------------------------------
   
-  arma::mat delta_guk(p*dr1, 1);
-  arma::mat v_delta(p*dr1, 1);
-  double g_uk = 0;
+  arma::mat delta_guk(K1 + p*dr1, 1);
+  arma::mat v_delta(K1 + p*dr1, 1);
   std::cout << "Sampling delta" << std::endl;
   
-  for(int gg = 0; gg < p; ++gg){
+  double rate_delta_guk ;
+  for(int uu = 0; uu < K1; ++ uu){
+    // Evaluate rate for delta_g,ij
+    rate_delta_guk = 0.5*(1/(curr_sigma_e*tau_sample*lambda(0,0)))*pow(as_scalar(alpha_sample(uu)),2) + 
+      1/as_scalar(curr_v_delta(uu,0));
+    
+    delta_guk(uu,0) =  1;// 1/arma::randg<double>( distr_param(1.00, 1/rate_delta_guk));
+    
+    v_delta(uu,0) = 1;// 1/arma::randg<double>(distr_param(1.00, 1/((1/(delta_guk(uu,0)))+(1/pow(C,2)))));
+    //std::cout << delta_guk(g_uk,0) << std::endl;
+    // std::cout << v_delta(g_uk,0) << std::endl;
+  }
+  
+  double g_uk = 0;
+  
+  
+  for(int gg = 1; gg < k; ++gg){
     for(int uk = 0; uk < dr1 ; ++uk){
       
       // Evaluate rate for delta_g,ij
-      double rate_delta_guk = 0.5*(1/(tau_sample*lambda(gg,0)))*pow(as_scalar(alpha_sample(K1+ gg*dr1 + uk)),2) + 
-      1/as_scalar(curr_v_delta(g_uk,0));
+      rate_delta_guk = 0.5*(1/(curr_sigma_e*tau_sample*lambda(gg,0)))*pow(as_scalar(alpha_sample(K1+ (gg-1)*dr1 + uk)),2) + 
+      1/as_scalar(curr_v_delta(K1 + g_uk,0));
         
-      delta_guk(g_uk,0) =  1;//1/arma::randg<double>( distr_param(1.00, 1/rate_delta_guk));
+      delta_guk(K1 + g_uk,0) = 1;// 1/arma::randg<double>( distr_param(1.00, 1/rate_delta_guk));
       
-      v_delta(g_uk,0) = 1;// 1/arma::randg<double>(distr_param(1.00, 1/((1/(delta_guk(g_uk,0)))+(1/pow(C,2)))));
+      v_delta(K1 + g_uk,0) = 1;//1/arma::randg<double>(distr_param(1.00, 1/((1/(delta_guk(K1 + g_uk,0)))+(1/pow(C,2)))));
       //std::cout << delta_guk(g_uk,0) << std::endl;
       // std::cout << v_delta(g_uk,0) << std::endl;
       
@@ -1897,14 +2010,14 @@ Rcpp::List sampleRegCoeff(arma::mat Rmat, arma::colvec Yvec, int dr1, arma::mat 
   ////std::cout << "shape mu ... " << std::endl;
   ////std::cout << "shape mu ... " << std::endl;
   
-  std::cout << "sampling sigma mu" << std::endl;
+  //std::cout << "sampling sigma mu" << std::endl;
   
-  double rate_mu = b + 0.5*as_scalar((alpha_sample.rows(0, K1-1).t()*Dmu*alpha_sample.rows(0, K1-1)));
-  double sigma_mu_sample = 1/arma::randg<double>(distr_param(0.5*K1 + a,1/rate_mu));
-  std::cout << sigma_mu_sample << std::endl;
+  //double rate_mu = b + 0.5*as_scalar((alpha_sample.rows(0, K1-1).t()*Dmu*alpha_sample.rows(0, K1-1)));
+  //double sigma_mu_sample = 1/arma::randg<double>(distr_param(0.5*K1 + a,1/rate_mu));
+  //std::cout << sigma_mu_sample << std::endl;
   
   return Rcpp::List::create(Rcpp::Named("alpha") = alpha_sample,
-                            Rcpp::Named("sigmamu") = sigma_mu_sample,
+                            //Rcpp::Named("sigmamu") = sigma_mu_sample,
                             Rcpp::Named("tau") = tau_sample,
                             Rcpp::Named("a_tau") = a_tau_sample,
                             Rcpp::Named("lambda") = lambda,
@@ -1971,17 +2084,17 @@ Rcpp::List  mcmc_sampler7(arma::colvec Yvec, arma::mat Ymat,
   
   int p = 2;
   
-  arma::mat lambda(p, niter);
-  lambda.col(0) = arma::randu(p);
+  arma::mat lambda(dr, niter);
+  lambda.col(0) = arma::randu(dr);
   
-  arma::mat p_g(p, niter);
-  p_g.col(0)  = arma::randu(p);
+  arma::mat p_g(dr, niter);
+  p_g.col(0)  = arma::randu(dr);
   
-  arma::mat delta_guk(p*dr1, niter);
-  delta_guk.col(0) = ones(1, p*dr1).t() ;// arma::randu(p*dr1); //
+  arma::mat delta_guk(K1 + p*dr1, niter);
+  delta_guk.col(0) = arma::randu(K1 + p*dr1); //ones(1, K1 + p*dr1).t() ;// arma::randu(p*dr1); //
   
-  arma::mat v_delta(p*dr1, niter);
-  v_delta.col(0) =  ones(1, p*dr1).t() ; //  arma::randu(p*dr1); //
+  arma::mat v_delta(K1+ p*dr1, niter);
+  v_delta.col(0) =  arma::randu(K1 + p*dr1); //ones(1, K1 + p*dr1).t() ; //  arma::randu(p*dr1); //
   
   Rcpp::List reg_sample; 
   double shape_e;
@@ -2000,6 +2113,11 @@ Rcpp::List  mcmc_sampler7(arma::colvec Yvec, arma::mat Ymat,
     
   arma::mat F1mat  = kron(arma::eye(nobs,nobs), fpca_x1);
   arma::mat F2mat  = kron(arma::eye(nobs,nobs), fpca_x2);
+  
+  
+  // Placeholder Dmat
+  arma::mat Dmat_inv(K1 + p*dr1, K1 + p*dr1, fill::zeros);
+  arma::mat Dmat1_inv(K1 + p*dr1, K1 + p*dr1);
   
   // Smoothing of x
   for(int iter = 1; iter < niter ; ++iter){
@@ -2059,31 +2177,37 @@ Rcpp::List  mcmc_sampler7(arma::colvec Yvec, arma::mat Ymat,
       v_delta.col(iter-1),  lambda.col(iter-1), p_g.col(iter - 1),
       as_scalar(tau(0,iter - 1)), as_scalar(a_tau(0,iter - 1)),
       as_scalar(sigmae(0,iter - 1)), as_scalar(sigmamu(0,iter - 1)));
-
     // Store the values
     arma::mat alpha_sample = reg_sample["alpha"];
     alpha.col(iter) = alpha_sample;
 
-    sigmamu(0,iter) = reg_sample["sigmamu"];
-    tau(0,iter) = reg_sample["tau"];
-    a_tau(0,iter) = reg_sample["a_tau"];
+   // sigmamu(0,iter) = reg_sample["sigmamu"];
+    tau(0,iter) = (reg_sample["tau"]);
+    a_tau(0,iter) = (reg_sample["a_tau"]);
 
     arma::mat lambda_sample = reg_sample["lambda"];
     lambda.col(iter) = lambda_sample;
     arma::mat p_g_sample = reg_sample["p_g"];
     p_g.col(iter) = p_g_sample;
+    
+    Dmat_inv = diagmat(1/lambda.col(iter));
+    //Dmat_inv.submat(0, 0, K1 - 1, K1 - 1 ) = diagmat(1/as_scalar(lambda(0,iter))*ones(K1));
+    //Dmat_inv.submat(K1, K1, dr - 1, dr - 1 ) = diagmat(kron(1/lambda.col(iter).rows(1, p), ones(dr1)));
 
     arma::mat delta_guk_sample = reg_sample["delta_guk"];
     delta_guk.col(iter) = delta_guk_sample;
-
+    Dmat1_inv = Dmat_inv%diagmat(1/delta_guk_sample);
+    
     arma::mat v_delta_sample = reg_sample["v_delta"];
     v_delta.col(iter) = v_delta_sample;
 
     // Sample the error terms
-    shape_e = ntaus*nobs/2 + i1;
+    shape_e = ntaus*nobs/2 + 0.5*dr - 0.5;
 
     ////std::cout << "rate e ... " << std::endl;
-    rate_e = i2 + 0.5*as_scalar((Yvec - (Rmat*alpha.col(iter))).t()*(Yvec - (Rmat*alpha.col(iter))));
+    rate_e =  0.5*as_scalar((Yvec - (Rmat*alpha.col(iter))).t()*(Yvec - (Rmat*alpha.col(iter)))) + 0.5*as_scalar((
+      alpha.col(iter).t()*Dmat_inv*alpha.col(iter)/as_scalar(tau(0,iter))
+    ));
     sigmae(0,iter)= 1/arma::randg<double>( distr_param(shape_e,1/rate_e));
 
     std::cout << sigmae(0,iter) << std::endl;
@@ -2111,4 +2235,10 @@ arma::mat silly_mistake(int a){
   arma::mat A(a,a, fill::zeros);
  // A(0,0) = 1.000;
   return A;
+}
+
+//[[Rcpp::export]]
+arma::mat check_kron(arma::mat A){
+  arma::mat B  = kron(A, ones(2));
+  return B;
 }

@@ -54,6 +54,12 @@ create.regression.surface <- function(taus, s, n.tau, type, delta){
      sz = 0.4
      a <- (5/(pi*sx*sz))*exp(-((tau-0.7)^2/sx^2)-((s-0.7)^2)/(sz^2))
      b <- 0
+   }else if (type == "p1") {
+     a = cos(2*pi*tau)*cos(pi*s)
+     b= 0
+   }else if (type == "p2") {
+     a = cos(pi*tau)*cos(pi*s)
+     b = 0
    }
 
    #=== Just trying other surfaces
@@ -116,35 +122,49 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25,
   # Within-curve errors
   
   # For X1
-  #u11 <- exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(1^2)),n.tau), ncol = n.tau))
-  #u12 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(2^2)),n.tau), ncol = n.tau))
-  #u21 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(1^2)),n.tau), ncol = n.tau))
-  #u22 <-  exp(matrix(rep(rnorm(nobs, mean = 0 , sd = 1/(2^2)),n.tau), ncol = n.tau))
+  
+   K = 1
+  u11 <- matrix(rep(rnorm(nobs, mean = 0 , sd = 1/1), n.tau), nrow = nobs)
+  u12 <-  matrix(rep(rnorm(nobs, mean = 0 , sd = 1/1), n.tau), nrow = nobs)
+  v1  =  matrix(rep(rnorm(nobs, mean = 0 , sd = 1/1), n.tau), nrow = nobs)
+
+  # K = 2
+
+  u21 <-  matrix(rep(rnorm(nobs, mean = 0 , sd = 1/4), n.tau), nrow = nobs)
+  u22 <-  matrix(rep(rnorm(nobs, mean = 0 , sd = 1/4), n.tau), nrow = nobs)
+  v2  =  matrix(rep(rnorm(nobs, mean = 0 , sd = 1/4), n.tau), nrow = nobs)
+  v3  =  matrix(rep(rnorm(nobs, mean = 0 , sd = 1/9), n.tau), nrow = nobs)
+  
   U = matrix(rep(rnorm(nobs, 10, sd = 4), n.tau), ncol = n.tau)
   V = matrix(rep(rnorm(nobs, 10, sd = 4), n.tau), ncol = n.tau)
   W = matrix(rep(rnorm(nobs, 1, sd = 0.5), n.tau), ncol = n.tau)
   W2 = matrix(rep(rnorm(nobs, 1, sd = 0.5), n.tau), ncol = n.tau)
   
-  X1.tau <- -U*sin(2*pi*tau.mat) + -V*cos(2*pi*tau.mat)
-  X2.tau <-  W*(-cos(2*pi*tau.mat))+W2*sin(pi*tau.mat)
-  X1.tau <- (X1.tau-mean(X1.tau))/sd(X1.tau)
+  X2.tau <- -U*sin(2*pi*tau.mat) + -V*cos(2*pi*tau.mat)
+  # X2.tau <-  W*(-cos(2*pi*tau.mat))+W2*sin(pi*tau.mat)
+  # X1.tau <- (X1.tau-mean(X1.tau))/sd(X1.tau)
   X2.tau <- (X2.tau-mean(X2.tau))/sd(X2.tau)
-  
+
+  X1.tau  = u11*sin(pi*tau.mat) + u12*cos(pi*tau.mat)+
+    u21*sin(2*pi*tau.mat) + u22*cos(2*pi*tau.mat)
+
+  #X2.tau = v1*cos(2*pi*tau.mat) + v2*cos(2*2*pi*tau.mat) + v1*cos(2*pi*tau.mat) + v3*cos(2*3*pi*tau.mat)
+
     #u11*sin(1*pi*tau.mat) + u12*sin(2*pi*tau.mat) +
     #u21*cos(1*pi*tau.mat) + u22*cos(2*pi*tau.mat)
   
   # Intercept term
-  mutau <- 1 + exp(-(2*((tau.mat)-0.5))^2)
+  mutau <-  exp(-(((tau.mat)-0.5))^2)
   #plot(mutau[i,]~taus)
   #-2*sin(4*pi*t(tau.mat))
   
-  Y.tau <- mutau + (X1.tau%*%theta1.s.tau*taus[2]) + (X2.tau%*%theta2.s.tau*taus[2])
+  f.tau <- mutau + (X1.tau%*%theta1.s.tau*taus[2]) + (X2.tau%*%theta2.s.tau*taus[2])
   # Generate IID error terms for Y_i(tau) (between curve errors)
   etau <- matrix(rnorm(n = nobs*n.tau, 
                        mean = 0 , 
-                       sd = sqrt(calculate.error(eSNR, Y.tau, nobs, n.tau))),
+                       sd = sqrt(calculate.error(eSNR, f.tau, nobs, n.tau))),
                  ncol = n.tau, nrow = nobs)
-  Y.tau <- Y.tau + etau
+  Y.tau <- f.tau + etau
   
   #print(calculate.error(eSNR, Y.tau, nobs, n.tau))
   #print((sd(Y.tau)/eSNR)^2)
@@ -182,7 +202,7 @@ simulate.hflm <- function(nobs = 100 , n.tau = 25,
     
   }
   
-  return(list(ytau = Y.tau, x1tau = X1.tau, theta1.s.tau = theta1.s.tau,theta2.s.tau = theta2.s.tau,
+  return(list(ytau = Y.tau, ftau = f.tau, x1tau = X1.tau, theta1.s.tau = theta1.s.tau,theta2.s.tau = theta2.s.tau,
               vary = calculate.error(eSNR, Y.tau, nobs, n.tau),
               x2tau = X2.tau))
 }
