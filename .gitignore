@@ -5,3 +5,8 @@
 src/*.o
 src/*.so
 src/*.dll
+*.tmp
+*.tmp
+*.RData
+*.pdf
+.Rproj.user/7F460EBE/cpp-compilation-config

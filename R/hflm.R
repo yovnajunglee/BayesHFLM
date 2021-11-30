@@ -1,24 +1,11 @@
-### Functions in the  R package
+#' @useDynLib BayesHFLM
+#' @importFrom Rcpp sourceCpp
 
-
+# Load required libraries
 library(mgcv)
 library(MASS)
 
-myRfunc <- function(){
-  print("hello R")
-}
 
-
-cholR <- function(ell_c, Q_c){
-  cholFac <- chol(Q_c)
-  forward.l <- forwardsolve(t(cholFac), ell_c)
-  zval <- rnorm(n= rep(0,dim(Q_c)[2]), mean = 0 , sd = 1)
-  c.sample <- backsolve((cholFac), (forward.l + zval))
-  c.sample
-}
-
-
-# Calculate the x matrix for the lag functional linear model
 create.design.matrix <- function(Xmat, ntaus, Ss, nobs, U, K, Fk, Psi, delta){
   # Evaluate the integral using Riemann Sums
   Xtilde <- matrix(NA, nrow = ntaus*nobs, ncol = U)
@@ -57,8 +44,6 @@ create.design.matrix <- function(Xmat, ntaus, Ss, nobs, U, K, Fk, Psi, delta){
 }
 
 
-# Construct regression surface from the vector
-# of coefficients
 reconstruct.surface <- function(buk, Fk, K, Psi, U, start, end, ntaus, Zmat.inv){
   buk.mat <- matrix(Zmat.inv%*%buk[start:end], ncol = K, nrow = U, byrow = FALSE) # U X K
   theta.hat <- matrix(NA, nrow = ntaus, ncol = ntaus)
@@ -71,13 +56,21 @@ reconstruct.surface <- function(buk, Fk, K, Psi, U, start, end, ntaus, Zmat.inv)
 }
 
 
-# Create an indicator matrix for given delta
-# !!!! NB does not handle delta = NULL, must set delta large (>1)
+#' Indicator matrix for Lag and Historical FLMs
+#'
+#' Produces an indicator matrix for the H/LFLMs
+#'
+#' @param delta post burn-in MCMC samples from `bayeshflm()`
+#' @param taus the credibility level required
+#' @param S s specification of which type of credibility interval should be generates. Only pointwise or joint CIs are supported.
+#' @param ntaus s specification of which type of credibility interval should be generates. Only pointwise or joint CIs are supported.
+#' @return A matrix with columns giving lower and upper credibility limits for each parameter.
+#' @export
 create.lag.matrix <- function(delta, taus, S, ntaus){
   ind <- expand.grid(taus , S)
   indd <- rep(1, ntaus*ntaus)
   ub <- sapply(ind$Var1, function(x){max(x - delta, 0)})
-  indd[which(ind$Var2>ind$Var1 |ind$Var2 < (ind$Var1-delta) )] <-0 # removed delta from here.
+  indd[which(ind$Var2>=ind$Var1 |ind$Var2 < (ind$Var1-delta) )] <-0 # removed delta from here.
   ind <- cbind(ind, ub, indd)
   indmat <- matrix(indd, nrow= ntaus, ncol = ntaus, byrow=TRUE)
  
@@ -88,13 +81,19 @@ create.lag.matrix <- function(delta, taus, S, ntaus){
   return(indmat)
 }
 
-# Function to fit a Bayesian HFLM
-
-
+#' Credibility intervals for estimates of the parameters of the Bayes HFLM
+#'
+#' Produces joint or pointwise credibility intervals of the functional parameters of the model \code{\link{brocolors}}
+#'
+#' @param mcmc_samples post burn-in MCMC samples from `bayeshflm()`
+#' @param level the credibility level required
+#' @param type s specification of which type of credibility interval should be generates. Only pointwise or joint CIs are supported.
+#' @return A matrix with columns giving lower and upper credibility limits for each parameter.
+#' @export
 bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss, 
-                  interceptInfo = list(Fk1="bs",K1=10),
-                  tensorInfo = list(Fk = "bs",Psi = "bs" ,U = 10,K = 10),
-                  PhiInfo = list(Phi="bs",U=10),
+                  interceptInfo = list(Fk1="bs",K1 = 10 ),
+                  tensorInfo = list(Fk = "bs", Psi = "bs", U = 10 , K = 10),
+                  fpcaInfo = list(knots = 5, npc = tensorInfo$U), 
                   lag = NULL, niter = 1000, nburn = 0.5,
                  #mcmc_params = list("alpha", "sigmae", "sigmab", "sigmamu", 
                 #                     "c", "sigmac", "sigmav","delta"),
@@ -117,10 +116,11 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   K1 = interceptInfo$K1
   ntaus = ncol(Ymat)
   nobs = nrow(Ymat)
+  dtau = diff(taus)[1]
   
   # 1. Set up basis functions
   
-  tensor_basis <- smoothCon(te(taus,Ss,bs=c(tensorInfo$Fk, tensorInfo$Psi),m=c(2,2),k=tensorInfo$K),data.frame(taus, Ss),
+  tensor_basis <- smoothCon(te(taus,Ss,bs=c(tensorInfo$Fk, tensorInfo$Psi),m=c(2,1),k=tensorInfo$K),data.frame(taus, Ss),
                             scale.penalty = TRUE)[[1]]
   
   intercept_basis<-  smoothCon(s(taus,bs=interceptInfo$Fk1,
@@ -133,7 +133,7 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
   # 2. Extract matrix of basis functions
   
-  Fk1 <- cbind( intercept_basis$X)
+  Fk1 <- cbind(intercept_basis$X)
   Fk <- tensor_basis$margin[[1]]$X
   Psi <- tensor_basis$margin[[2]]$X  
   K1 = ncol(Fk1)
@@ -143,7 +143,7 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
   Dmu <- matrix(0, K1, K1)
   #diag(Dmu) <- 1
-  #Dmu[1,1] <- 0.0000001
+  Dmu[1,1] <- 0.0000001
   #Dmu[-1,-1] <- intercept_basis$S[[1]]
   #diag(Dmu[1:3,1:3]) <- 1e-5
   Dmu <- intercept_basis$S[[1]]
@@ -171,8 +171,8 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
   # First predictor
   
-  fpca_x1 <- refund::fpca.face(Y = Xmat1, center = F , argvals = taus,
-                               knots = 12, npc = U)
+  fpca_x1 <- refund::fpca.face(Y = Xmat1, center = T , knots = fpcaInfo$knots, npc = fpcaInfo$npc)
+  
   
   Xmat1_centered = as.matrix(t(apply(Xmat1, 1, function(x) {x - fpca_x1$mu})))
   mu1_mat <- as.matrix(rep(as.matrix(fpca_x1$mu),nobs))
@@ -180,8 +180,11 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   
   # Second predictor
   
-  fpca_x2 <- refund::fpca.face(Y = Xmat2, center = F , argvals = taus,
-                               knots = 12, npc = U)
+  fpca_x2 <- refund::fpca.face(Y = Xmat2, center = T ,knots = fpcaInfo$knots, npc = fpcaInfo$npc)
+  
+  #fpca_x2 <- refund::fpca.sc(Y = Xmat2, center = F , nbasis = ntaus-1,
+  #                           argvals = taus, npc = U)
+  
   Xmat2_centered = as.matrix(t(apply(Xmat2, 1, function(x) {x - fpca_x2$mu})))
   mu2_mat <- as.matrix(rep(as.matrix(fpca_x2$mu),nobs))
   
@@ -293,8 +296,8 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   # -- 7b. Estimated fitted values
   
   
-  Yfit <- (Xmat1%*%(beta1.gibbs*(taus[16]-taus[15]))+
-             Xmat2%*%(beta2.gibbs*(taus[16]-taus[15])))[,taus>=DEL]+
+  Yfit <- (Xmat1%*%(beta1.gibbs*(dtau))+
+             Xmat2%*%(beta2.gibbs*(dtau)))[,taus>=DEL]+
     matrix(cbind(FF1)%*%keep[1:(K1)], ncol = length(taus[taus>=DEL]), byrow = TRUE)
   
   mu_hat = matrix(cbind(FF1)%*%keep[1:(K1)], ncol = length(taus[taus>=DEL]), byrow = TRUE)
@@ -306,19 +309,69 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
                Yfit = Yfit, 
                DEL = DEL, 
                mu_hat = mu_hat,
-               post_mu = post_mu,
+               post_mu = post_mu[1:ntaus,],
                post_beta1 = post_beta1,
-               post_beta2 = post_beta2))
+               post_beta2 = post_beta2,
+               Lmat = ind_mat))
   
 }
 
-# R function to generate predicted values based on hflm_mcmc parameters
-predict_hflm  = function(hflm_mcmc, X1_new, X2_new, taus, DEL){
-  preds <- (X1_new%*%(hflm_mcmc$beta_hat$beta1*(taus[16]-taus[15]))+
-             X2_new%*%(hflm_mcmc$beta_hat$beta2*(taus[16]-taus[15])))[,taus>=DEL]+
+#' Credibility intervals for estimates of the parameters of the Bayes HFLM
+#'
+#' Produces joint or pointwise credibility intervals of the functional parameters of the model \code{\link{brocolors}}
+#'
+#' @param mcmc_samples post burn-in MCMC samples from \code{\link{bayeshflm}}
+#' @param level the credibility level required
+#' @param type s specification of which type of credibility interval should be generates. Only pointwise or joint CIs are supported.
+#' @return A matrix with columns giving lower and upper credibility limits for each parameter.
+#' @export
+predict_hflm  = function(hflm_mcmc, X1_new, X2_new, taus, DEL, 
+                         interval = TRUE){
+  preds <- (X1_new%*%(hflm_mcmc$beta_hat$beta1*(dtau))+
+             X2_new%*%(hflm_mcmc$beta_hat$beta2*(dtau)))[,taus>=DEL]+
     hflm_mcmc$mu_hat[1:(nrow(X1_new)),]
   
+  
   return(preds)
+}
+
+#' Credibility intervals for estimates of the parameters of the Bayes HFLM
+#'
+#' Produces joint or pointwise credibility intervals of the functional parameters of the model 
+#'
+#' @param object HFLM object from \code{\link{bayeshflm}}
+#' @param level the credibility level required
+#' @param type s specification of which type of credibility interval should be generates. Only pointwise or joint CIs are supported.
+#' @return A matrix with columns giving lower and upper credibility limits for each parameter.
+#' @export
+credint_hflm<- function(object, level = .95, type = c("pointwise", "joint")){
+  NonZero = which(c(object$Lmat) == 1)
+  mcmc_samples = as.matrix(rbind(object$post_mu,
+                object$post_beta1[NonZero,],
+                object$post_beta2[NonZero,]))
+  print(dim(mcmc_samples))
+  
+  alpha = (1-level)/2
+  intervals = matrix(NA, ncol = 2, nrow = nrow(mcmc_samples))
+  if (type == "pointwise"){
+    # Pointwise = quantiles of post-burn-in samples
+    intervals = t(apply(mcmc_samples, 1, quantile, probs = c(alpha, 1-alpha)))
+  }else{
+    # Scale the MCMC samples and take the max over v,t, p
+    scaled_mcmc = (scale(t(mcmc_samples), center = TRUE, scale = TRUE))
+    # For each mcmc run, find the max value
+    qm <- apply(abs(scaled_mcmc), 1, max)
+  
+    # Joint credibility intervals as per Meyer et. al.
+    post_mean  = apply(mcmc_samples, 1, mean)
+    post_sd = apply(mcmc_samples, 1, sd)
+    
+    intervals[,1] = post_mean - (quantile(qm, probs = 1-alpha)*post_sd)
+    intervals[,2] = post_mean + (quantile(qm, probs = 1-alpha)*post_sd)
+    
+  }
+  
+  return(intervals)
 }
 
 

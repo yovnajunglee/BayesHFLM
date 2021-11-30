@@ -9,3 +9,4 @@ Description: Bayesian implementation of the historical functional linear model w
 License: What license is it under?
 Imports: Rcpp (>= 1.0.5), RcppNumerical, roptim
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen, RcppNumerical, roptim
+RoxygenNote: 7.1.1

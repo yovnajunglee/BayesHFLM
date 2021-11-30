@@ -1,3 +1,7 @@
+#' @useDynLib BayesHFLM
+
+
+
 # =========================================================
 # Simulation study as per the data generating process
 # described in THESIS TITLE: Chapter X Section Y
@@ -101,6 +105,15 @@ calculate.error <- function(eSNR = 5, yij, nobs, n.tau){
   vary <- sum(aa)/(eSNR*(nobs-1)*n.tau)
 }
 
+#' Credibility intervals for estimates of the parameters of the Bayes HFLM
+#'
+#' Produces joint or pointwise credibility intervals of the functional parameters of the model \code{\link{bayeshflm}}
+#'
+#' @param mcmc_samples post burn-in MCMC samples from \code{\link{bayeshflm}}
+#' @param level the credibility level required
+#' @param type s specification of which type of credibility interval should be generates. Only pointwise or joint CIs are supported.
+#' @return A matrix with columns giving lower and upper credibility limits for each parameter.
+#' @export
 simulate.hflm <- function(nobs = 100 , n.tau = 25,
                           beta1 = "bimodal-lagged" , varx1 = 0.1, 
                           beta2 = "null", varx2 = 0.1, eSNR = 5,  

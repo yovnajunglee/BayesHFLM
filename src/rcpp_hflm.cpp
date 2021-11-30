@@ -197,7 +197,7 @@ arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
                    // std::cout << s << std::endl;
                       double psival = Psi(s, u);
                       double sval = Ss(s);
-                          if (sval <= (tauval) & sval >= (tauval-lower_bound)){
+                          if (sval < (tauval) & sval >= (tauval-lower_bound)){
                               intval = intval + Xmat(i,s)*psival*(taus(1)-taus(0));
                           }
 
@@ -234,7 +234,7 @@ arma::mat constructMatrix(arma::mat Xvec, arma::colvec taus,
    //arma::mat tau2 = tau_mat%tau_mat;
    //arma::mat tau3 = tau2%tau_mat;
 
-  arma::mat Rmat  = XX*Zmat ; //arma::join_horiz(FF1, XX); // arma::join_horiz(arma::ones(totals,1), FF1, XX); 
+  arma::mat Rmat  = XX*Zmat; //arma::join_horiz(FF1, XX); // arma::join_horiz(arma::ones(totals,1), FF1, XX); 
    //arma::join_horiz(FF1, XX);
     //
    //Rmat = arma::join_horiz(Rmat,FF1, XX);
@@ -1589,16 +1589,16 @@ Rcpp::List  mcmc_sampler6(arma::colvec Yvec, arma::mat Ymat,
   ////std::cout << "Init sigma ... " << std::endl;
   
   arma::mat sigma_e(1, niter);
-  sigma_e.col(0) = 10 ; //arma::randu(1);
+  sigma_e.col(0) = arma::randu(1);
   
   arma::mat sigma_b1(1, niter);
-  sigma_b1.col(0) = 10 ; //arma::randu(1);
+  sigma_b1.col(0) = arma::randu(1);
   arma::mat sigma_b2(1, niter);
-  sigma_b2.col(0) = 10 ; //arma::randu(1);
+  sigma_b2.col(0) = arma::randu(1);
   
   
   arma::mat sigma_mu(1, niter);
-  sigma_mu.col(0) = 10; // arma::randu(1);
+  sigma_mu.col(0) =  arma::randu(1);
   int nX = Xmat1_centered.n_rows;
   arma::mat Xsample(nX*ntaus, 1);
   arma::mat sigs(dr, dr);
@@ -2070,16 +2070,16 @@ Rcpp::List  mcmc_sampler7(arma::colvec Yvec, arma::mat Ymat,
   alpha.col(0) = arma::randu(dr);
   
   arma::mat sigmae(1, niter);
-  sigmae.col(0)= 10 ; // arma::randu(1);
+  sigmae.col(0)= arma::randu(1);
   
   arma::mat sigmamu(1, niter);
-  sigmamu.col(0) = 10 ; // arma::randu(1);
+  sigmamu.col(0) = arma::randu(1);
   
   arma::mat tau(1, niter);
-  tau.col(0)  = 10 ; // arma::randu(1);
+  tau.col(0)  =  arma::randu(1);
   
   arma::mat a_tau(1, niter);
-  a_tau.col(0) = 10 ; // arma::randu(1);
+  a_tau.col(0) =  arma::randu(1);
   
   
   int p = 2;
