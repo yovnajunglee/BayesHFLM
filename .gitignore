@@ -10,3 +10,5 @@ src/*.dll
 *.RData
 *.pdf
 .Rproj.user/7F460EBE/cpp-compilation-config
+.Rproj.user/7F460EBE/cpp-compilation-config
+.DS_Store
