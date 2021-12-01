@@ -114,7 +114,7 @@ calculate.error <- function(eSNR = 5, yij, nobs, n.tau){
 #' @param type s specification of which type of credibility interval should be generates. Only pointwise or joint CIs are supported.
 #' @return A matrix with columns giving lower and upper credibility limits for each parameter.
 #' @export
-simulate.hflm <- function(nobs = 100 , n.tau = 25,
+simulate_hflm <- function(nobs = 100 , n.tau = 25,
                           beta1 = "bimodal-lagged" , varx1 = 0.1, 
                           beta2 = "null", varx2 = 0.1, eSNR = 5,  
                           delta = NULL, plot = TRUE, seed = 1234){

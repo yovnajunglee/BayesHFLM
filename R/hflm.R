@@ -93,7 +93,7 @@ create.lag.matrix <- function(delta, taus, S, ntaus){
 bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss, 
                   interceptInfo = list(Fk1="bs",K1 = 10 ),
                   tensorInfo = list(Fk = "bs", Psi = "bs", U = 10 , K = 10),
-                  fpcaInfo = list(knots = 5, npc = tensorInfo$U), 
+                  fpcaInfo = list(knots =  15, npc = tensorInfo$U), 
                   lag = NULL, niter = 1000, nburn = 0.5,
                  #mcmc_params = list("alpha", "sigmae", "sigmab", "sigmamu", 
                 #                     "c", "sigmac", "sigmav","delta"),
@@ -220,7 +220,7 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
                                  taus_fit, Ss,
                                  Fk_fit, Fk1_fit, Psi,
                                  as.matrix(fpca_x1$efunctions),as.matrix(fpca_x2$efunctions),
-                                 mu1_mat, mu2_mat, U,  
+                                 mu1_mat, mu2_mat, fpcaInfo$npc,  
                                  matrix(c(fpca_x1$evalues,fpca_x2$evalues), ncol = 1),
                                  eps_start, 
                                  diag(1, ncol =  K1, nrow = K1), Db.d,
@@ -327,6 +327,7 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
 #' @export
 predict_hflm  = function(hflm_mcmc, X1_new, X2_new, taus, DEL, 
                          interval = TRUE){
+  dtau = diff(taus)[1]
   preds <- (X1_new%*%(hflm_mcmc$beta_hat$beta1*(dtau))+
              X2_new%*%(hflm_mcmc$beta_hat$beta2*(dtau)))[,taus>=DEL]+
     hflm_mcmc$mu_hat[1:(nrow(X1_new)),]
@@ -344,11 +345,11 @@ predict_hflm  = function(hflm_mcmc, X1_new, X2_new, taus, DEL,
 #' @param type s specification of which type of credibility interval should be generates. Only pointwise or joint CIs are supported.
 #' @return A matrix with columns giving lower and upper credibility limits for each parameter.
 #' @export
-credint_hflm<- function(object, level = .95, type = c("pointwise", "joint")){
+credint_hflm<- function(object, burnin, level = .95, type = c("pointwise", "joint")){
   NonZero = which(c(object$Lmat) == 1)
-  mcmc_samples = as.matrix(rbind(object$post_mu,
-                object$post_beta1[NonZero,],
-                object$post_beta2[NonZero,]))
+  mcmc_samples = as.matrix(rbind(object$post_mu[,burnin],
+                object$post_beta1[NonZero, burnin],
+                object$post_beta2[NonZero, burnin]))
   print(dim(mcmc_samples))
   
   alpha = (1-level)/2
