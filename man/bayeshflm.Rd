@@ -10,16 +10,17 @@ bayeshflm(
   Xmat2,
   taus,
   Ss,
-  interceptInfo = list(Fk1 = "bs", K1 = 10),
+  interceptInfo = list(Fk1 = "ts", K1 = 10),
   tensorInfo = list(Fk = "bs", Psi = "bs", U = 10, K = 10),
-  fpcaInfo = list(knots = 5, npc = tensorInfo$U),
+  fpcaInfo = list(knots = 15, npc = tensorInfo$U),
   lag = NULL,
   niter = 1000,
   nburn = 0.5,
-  mcmc_hyper = list(i1 = 0.001, i2 = 0.001, a = 0.001, b = 0.001, A = 1, B = 1, C = 1),
-  diagonalise = TRUE,
+  alpha_start = NULL,
+  xi_start = NULL,
+  mcmc_hyper = list(i1 = 0.001, i2 = 0.001, a = 0.001, b = 0.001),
   smooth = TRUE,
-  prior = "HS"
+  method = "ind"
 )
 }
 \arguments{

@@ -4,7 +4,7 @@
 \alias{credint_hflm}
 \title{Credibility intervals for estimates of the parameters of the Bayes HFLM}
 \usage{
-credint_hflm(object, level = 0.95, type = c("pointwise", "joint"))
+credint_hflm(object, burnin, level = 0.95, type = c("pointwise", "joint"))
 }
 \arguments{
 \item{object}{HFLM object from \code{\link{bayeshflm}}}

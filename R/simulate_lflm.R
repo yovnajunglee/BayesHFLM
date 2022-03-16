@@ -160,7 +160,8 @@ simulate_hflm <- function(nobs = 100 , n.tau = 25,
 
   X1.tau  = u11*sin(pi*tau.mat) + u12*cos(pi*tau.mat)+
     u21*sin(2*pi*tau.mat) + u22*cos(2*pi*tau.mat)
-
+  #X1.tau <- scale(X1.tau)
+  
   #X2.tau = v1*cos(2*pi*tau.mat) + v2*cos(2*2*pi*tau.mat) + v1*cos(2*pi*tau.mat) + v3*cos(2*3*pi*tau.mat)
 
     #u11*sin(1*pi*tau.mat) + u12*sin(2*pi*tau.mat) +
@@ -172,6 +173,7 @@ simulate_hflm <- function(nobs = 100 , n.tau = 25,
   #-2*sin(4*pi*t(tau.mat))
   
   f.tau <- mutau + (X1.tau%*%theta1.s.tau*taus[2]) + (X2.tau%*%theta2.s.tau*taus[2])
+  #f.tau = scale(f.tau)
   # Generate IID error terms for Y_i(tau) (between curve errors)
   etau <- matrix(rnorm(n = nobs*n.tau, 
                        mean = 0 , 
