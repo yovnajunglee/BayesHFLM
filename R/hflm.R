@@ -117,10 +117,6 @@ bayeshflm <- function(Ymat, Xmat1, Xmat2, taus, Ss,
   intercept_basis<-  smoothCon(s(taus,bs=interceptInfo$Fk1,
                                 k = interceptInfo$K1, m = c(2,2)), data.frame(taus))[[1]]
   
-  #phi_basis <- smoothCon(s(taus,bs=PhiInfo$Phi, m = 2, k =  PhiInfo$U),data.frame(taus),
-  #                     scale.penalty = TRUE)[[1]] 
-  # This is not needed anymore if FPCA is used
-  
   
   # 2. Extract matrix of basis functions
   
